@@ -41,6 +41,10 @@ func init() {
 
 	//ApiNamesPriceController
 	beego.Router("/api/name/info", &controllers.ApiNamesInfoController{})
+
+	//ApiTransferAddController
+	beego.Router("/api/name/transfer", &controllers.ApiTransferAddController{})
+
 	//ApiNamesPriceController
 	beego.Router("/api/user/info", &controllers.ApiUserInfoController{})
 
