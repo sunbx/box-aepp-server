@@ -7,6 +7,9 @@ import (
 	"net/url"
 )
 
+type BlockTopController struct {
+	BaseController
+}
 type ApiLoginController struct {
 	BaseController
 }
@@ -50,6 +53,24 @@ type ApiUserInfoController struct {
 	BaseController
 }
 
+func (c *BlockTopController) Post() {
+	resp, err := http.PostForm("https://aeasy.io/api/ae/block_top",
+		url.Values{
+			"app_id": {beego.AppConfig.String("AEASY::appId")},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
 func (c *ApiLoginController) Post() {
 	mnemonic := c.GetString("mnemonic")
 	resp, err := http.PostForm("https://aeasy.io/api/user/login",
@@ -155,12 +176,15 @@ func (c *ApiNamesOverController) Post() {
 
 func (c *ApiNamesMyRegisterController) Post() {
 	page := c.GetString("page")
-	signingKey := c.GetString("signingKey")
+	address := c.GetString("address")
+
+	print("address:", address)
+	print("page:", page)
 	resp, err := http.PostForm("https://aeasy.io/api/names/my/register",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"page":       {page},
-			"signingKey": {signingKey},
+			"app_id":  {beego.AppConfig.String("AEASY::appId")},
+			"page":    {page},
+			"address": {address},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -178,12 +202,12 @@ func (c *ApiNamesMyRegisterController) Post() {
 
 func (c *ApiNamesMyOverController) Post() {
 	page := c.GetString("page")
-	signingKey := c.GetString("signingKey")
+	address := c.GetString("address")
 	resp, err := http.PostForm("https://aeasy.io/api/names/my/over",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"page":       {page},
-			"signingKey": {signingKey},
+			"app_id":  {beego.AppConfig.String("AEASY::appId")},
+			"page":    {page},
+			"address": {address},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -246,7 +270,7 @@ func (c *ApiNamesInfoController) Post() {
 func (c *ApiNamesAddController) Post() {
 	name := c.GetString("name")
 	signingKey := c.GetString("signingKey")
-	resp, err := http.PostForm("https://aeasy.io/api/names/add",
+	resp, err := http.PostForm("http://localhost:8088/api/names/add",
 		url.Values{
 			"app_id":     {beego.AppConfig.String("AEASY::appId")},
 			"name":       {name},
@@ -272,9 +296,9 @@ func (c *ApiTransferAddController) Post() {
 	recipientAddress := c.GetString("recipientAddress")
 	resp, err := http.PostForm("https://aeasy.io/api/names/transfer",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"name":       {name},
-			"signingKey": {signingKey},
+			"app_id":           {beego.AppConfig.String("AEASY::appId")},
+			"name":             {name},
+			"signingKey":       {signingKey},
 			"recipientAddress": {recipientAddress},
 		})
 	if err != nil {
@@ -291,13 +315,13 @@ func (c *ApiTransferAddController) Post() {
 	c.Ctx.WriteString(string(body))
 }
 
-
 func (c *ApiUserInfoController) Post() {
-	signingKey := c.GetString("signingKey")
+	address := c.GetString("address")
+	print("address->",address)
 	resp, err := http.PostForm("https://aeasy.io/api/user/info",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"signingKey": {signingKey},
+			"app_id":  {beego.AppConfig.String("AEASY::appId")},
+			"address": {address},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})

@@ -11,6 +11,7 @@
         padding: 0px;
         font-size: 12px;
         font-weight: normal;
+        position: relative;
     }
 
     ul {
@@ -64,18 +65,23 @@
     /*    position: absolute;*/
     /*}*/
 
+    .bgs-base{
+        position: relative;
+        width: 1280px;
+        margin: 0 auto;
+    }
     .bgs {
         position: absolute;
         height: 100%;
         z-index: -1;
-        margin-right: 50px;
+       margin-top: 10%;
     }
 
     .bg1 {
         width: 593px;
         height: 798px;
         background: url("../static/img/index_bg1.png");
-        right: -20%;
+        right: -10%;
         top: 10%;
         position: absolute;
         background-size: 100% 100%;
@@ -85,7 +91,7 @@
         width: 360px;
         height: 717px;
         background: url("../static/img/index_bg2.png");
-        right: -5%;
+        right: 5%;
         top: 20%;
         position: absolute;
         background-size: 100% 100%;
@@ -97,8 +103,8 @@
         border-radius: 160px;
         background: rgb(231, 22, 101);
         position: absolute;
-        margin-top: 15%;
-        margin-left: 25%;
+        margin-top: 5%;
+        margin-left: 5%;
         background-size: 100% 100%;
     }
 
@@ -106,9 +112,9 @@
         width: 40px;
         height: 40px;
         background: url("../static/img/index_bg4.png");
-        right: -13%;
-        top: 40%;
+        right: 0%;
         position: absolute;
+        margin-top: 120px;
         background-size: 100% 100%;
     }
 
@@ -116,8 +122,8 @@
         width: 140px;
         height: 80px;
         background: url("../static/img/index_bg5.png");
-        top: 25%;
-        left: 55%;
+        margin-top: 10%;
+        left: 35%;
         position: absolute;
         background-size: 100% 100%;
     }
@@ -197,12 +203,15 @@
 </style>
 <body>
 
-<div class="bgs w1280">
-    <div class="bg1"></div>
-    <div class="bg2"></div>
-    <div class="bg3"></div>
-    <div class="bg4"></div>
-    <div class="bg5"></div>
+<div class="bgs-base">
+    <div class="bgs w1280">
+        <div class="bg1"></div>
+        <div class="bg2"></div>
+        <div class="bg3"></div>
+        <div class="bg4"></div>
+        <div class="bg5"></div>
+
+    </div>
 
 </div>
 
