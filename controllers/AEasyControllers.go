@@ -10,6 +10,9 @@ import (
 type BlockTopController struct {
 	BaseController
 }
+type ApiBaseDataController struct {
+	BaseController
+}
 type ApiLoginController struct {
 	BaseController
 }
@@ -71,6 +74,29 @@ func (c *BlockTopController) Post() {
 	}
 	c.Ctx.WriteString(string(body))
 }
+
+
+func (c *ApiBaseDataController) Post() {
+	resp, err := http.PostForm("https://aeasy.io/api/base/data",
+		url.Values{
+			"app_id": {beego.AppConfig.String("AEASY::appId")},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+
+
 func (c *ApiLoginController) Post() {
 	mnemonic := c.GetString("mnemonic")
 	resp, err := http.PostForm("https://aeasy.io/api/user/login",

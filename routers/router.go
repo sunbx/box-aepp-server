@@ -7,15 +7,11 @@ import (
 
 func init() {
 
+	//获取当前区块高度
 	beego.Router("/api/ae/block_top", &controllers.BlockTopController{})
 
-
-	//抓取数据
-
-	beego.Router("/article/data", &controllers.ArticleDataController{})
-
-	//api调用
-	beego.Router("/article/list", &controllers.ArticleListController{})
+	//aeasy login
+	beego.Router("/api/base/data", &controllers.ApiBaseDataController{})
 
 	//aeasy login
 	beego.Router("/api/login", &controllers.ApiLoginController{})
