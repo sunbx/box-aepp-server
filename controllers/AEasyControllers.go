@@ -16,8 +16,14 @@ type ApiBaseDataController struct {
 type ApiLoginController struct {
 	BaseController
 }
-
 type ApiRegisterController struct {
+	BaseController
+}
+
+type ApiWalletTransferRecordController struct {
+	BaseController
+}
+type WalletTransferController struct {
 	BaseController
 }
 
@@ -103,6 +109,54 @@ func (c *ApiLoginController) Post() {
 		url.Values{
 			"app_id":   {beego.AppConfig.String("AEASY::appId")},
 			"mnemonic": {mnemonic},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+func (c *ApiWalletTransferRecordController) Post() {
+	address := c.GetString("address")
+	page := c.GetString("page")
+	resp, err := http.PostForm("http://localhost:8088/api/wallet/transfer/record",
+		url.Values{
+			"app_id":   {beego.AppConfig.String("AEASY::appId")},
+			"address": {address},
+			"page": {page},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+func (c *WalletTransferController) Post() {
+	amount := c.GetString("amount")
+	address := c.GetString("address")
+	signingKey := c.GetString("signingKey")
+	resp, err := http.PostForm("http://localhost:8088/api/wallet/transfer",
+		url.Values{
+			"app_id":   {beego.AppConfig.String("AEASY::appId")},
+			"address": {address},
+			"amount": {amount},
+			"signingKey": {signingKey},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -344,7 +398,7 @@ func (c *ApiTransferAddController) Post() {
 func (c *ApiUserInfoController) Post() {
 	address := c.GetString("address")
 	print("address->",address)
-	resp, err := http.PostForm("https://aeasy.io/api/user/info",
+	resp, err := http.PostForm("http://localhost:8088/api/user/info",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
 			"address": {address},
