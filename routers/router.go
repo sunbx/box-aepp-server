@@ -15,6 +15,9 @@ func init() {
 	//aeasy login
 	beego.Router("/api/base/data", &controllers.ApiBaseDataController{})
 
+	//所有域名基础信息
+	beego.Router("/api/names/base", &controllers.NamesBaseController{})
+
 	//aeasy login
 	beego.Router("/api/user/login", &controllers.ApiLoginController{})
 
@@ -56,5 +59,14 @@ func init() {
 
 	//ApiNamesPriceController
 	beego.Router("/api/user/info", &controllers.ApiUserInfoController{})
+
+	//ApiNamesPriceController
+	beego.Router("/api/contract/call", &controllers.ApiContractCallController{})
+
+	//static call
+	beego.Router("/api/contract/call/static", &controllers.ApiContractCallStaticController{})
+
+	//ApiNamesPriceController
+	beego.Router("/api/contract/decode", &controllers.ApiContractDecideController{})
 
 }

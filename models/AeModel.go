@@ -1,22 +1,29 @@
 package models
 
 import (
-	"ae/utils"
+	"box/utils"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/aeternity/aepp-sdk-go/account"
 	"github.com/aeternity/aepp-sdk-go/aeternity"
+	"github.com/aeternity/aepp-sdk-go/binary"
 	"github.com/aeternity/aepp-sdk-go/config"
 	"github.com/aeternity/aepp-sdk-go/naet"
 	"github.com/aeternity/aepp-sdk-go/swagguard/node/models"
 	"github.com/aeternity/aepp-sdk-go/transactions"
+	rlp "github.com/randomshinichi/rlpae"
 	"github.com/tyler-smith/go-bip39"
 	"io/ioutil"
+	"math/big"
 	"strconv"
 )
 
 //var nodeURL = "https://mainnet.aeternal.io"
-var nodeURL = "http://node.aechina.io:3013"
+//var NodeURL = "http://node.aechina.io:3013"
+var NodeURL = "http://localhost:3013"
+var NodeURLD = "http://localhost:3113"
+var CompilerURL = "http://localhost:3080"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -79,14 +86,14 @@ func CreateAccountUtils() (mnemonic string, signingKey string, address string) {
 
 //返回最新区块高度
 func ApiBlocksTop() (height uint64) {
-	client := naet.NewNode(nodeURL, false)
+	client := naet.NewNode(NodeURL, false)
 	h, _ := client.GetHeight()
 	return h
 }
 
 //地址信息返回用户信息
 func ApiGetAccount(address string) (account *models.Account, e error) {
-	client := naet.NewNode(nodeURL, false)
+	client := naet.NewNode(NodeURL, false)
 	acc, e := client.GetAccount(address)
 	return acc, e
 }
@@ -101,11 +108,12 @@ func ApiSpend(account *account.Account, recipientId string, amount float64, data
 	tokens, err := strconv.ParseFloat(accountNet.Balance.String(), 64)
 	if err == nil {
 		if tokens/1000000000000000000 > amount {
-			node := naet.NewNode(nodeURL, false)
+			node := naet.NewNode(NodeURL, false)
 			//_, _, ttlnoncer := transactions.GenerateTTLNoncer(node)
 			ttlnoncer := transactions.NewTTLNoncer(node)
 
 			spendTx, err := transactions.NewSpendTx(account.Address, recipientId, utils.GetRealAebalanceBigInt(amount), []byte(data), ttlnoncer)
+
 			if err != nil {
 				return nil, err
 			}
@@ -128,7 +136,7 @@ func ApiVersion() (v string) {
 
 //返回tx详细信息
 func ApiThHash(th string) (tx *models.GenericSignedTx) {
-	client := naet.NewNode(nodeURL, false)
+	client := naet.NewNode(NodeURL, false)
 	t, _ := client.GetTransactionByHash(th)
 	return t
 }
@@ -151,7 +159,7 @@ func CompileContract() (s string, e error) {
 }
 
 func CompileContractInit(account *account.Account, name string, number string) (s string, e error) {
-	n := naet.NewNode(nodeURL, false)
+	n := naet.NewNode(NodeURL, false)
 	c := naet.NewCompiler("https://compiler.aepps.com", true)
 	ctx := aeternity.NewContext(account, n)
 	ctx.SetCompiler(c)
@@ -193,33 +201,99 @@ func Is1AE(address string) bool {
 	return true
 }
 
-func CallContractFunction(account *account.Account, ctID string, function string, args []string) (s interface{}, e error) {
-	n := naet.NewNode(nodeURL, false)
-	//c := naet.NewCompiler(nodeURL, true)
-	c := naet.NewCompiler("https://compiler.aepps.com", false)
+func CallContractFunction(account *account.Account, ctID string, function string, args []string, amount float64) (s interface{}, functionEncode string, e error) {
+	n := naet.NewNode(NodeURL, false)
+	//c := naet.NewCompiler("https://compiler.aepps.com", false)
+	c := naet.NewCompiler("http://localhost:3080", false)
 	ctx := aeternity.NewContext(account, n)
 	ctx.SetCompiler(c)
-	contract := aeternity.NewContract(ctx)
-	expected, _ := ioutil.ReadFile("contract/fungible-token.aes")
-	callReceipt, err := contract.Call(ctID, string(expected), function, args, config.CompilerBackendFATE)
-	if err != nil {
-		return nil, err
-	}
-	response := utils.Get(nodeURL + "/v2/transactions/" + callReceipt.Hash + "/info")
-	var callInfoResult CallInfoResult
-	err = json.Unmarshal([]byte(response), &callInfoResult)
-	if err != nil {
-		return nil, err
-	}
-	//tx, e := n.GetTransactionByHash(callReceipt.Hash)
-	//tx.Tx()
-	//genericTx, e := models.UnmarshalGenericTx(bytes.NewBuffer(i.), runtime.())
-	decodeResult, err := c.DecodeCallResult(callInfoResult.CallInfo.ReturnType, callInfoResult.CallInfo.ReturnValue, function, string(expected), config.Compiler.Backend)
-	if err != nil {
-		return nil, err
-	}
-	//fmt.Println(genericTx)
+	if function == "getBalances" {
+		function = "cb_KxH0qmIOP6GXuQs="
+	} else if function == "getDayAccounts" {
+		function = "cb_KxH+AYP0P45zC7A="
+	} else if function == "getTokenBalance" {
+		function = "cb_KxFas8uvP/b2klQ="
+	} else if function == "getContractBalance" {
+		function = "cb_KxFw6hiSP7QFPJ4="
+	} else {
+		source, _ := ioutil.ReadFile("contract/AMBLockContract.aes")
 
-	return decodeResult, err
+		callData, err := ctx.Compiler().EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		println(callData)
+		if err != nil {
+			return nil, function, err
+		}
+		function = callData
+	}
 
+	callTx, err := transactions.NewContractCallTx(ctx.SenderAccount(), ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, function, ctx.TTLNoncer())
+	if err != nil {
+		return nil, function, err
+	}
+	callReceipt, err := ctx.SignBroadcast(callTx, 1)
+
+	if err != nil {
+		return nil, function, err
+	}
+
+	return callReceipt.Hash, function, err
+	//return decodeResult, err
+}
+
+var cacheCallMap = make(map[string]string)
+
+func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
+	node := naet.NewNode(NodeURL, false)
+	compile := naet.NewCompiler(CompilerURL, false)
+	source, _ := ioutil.ReadFile("contract/AMBLockContract.aes")
+	var callData = function
+	if v, ok := cacheCallMap[function]; ok {
+		callData = v
+	} else {
+		callData,_ = compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		cacheCallMap[function] = callData
+	}
+
+
+	println(callData)
+	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
+	w := &bytes.Buffer{}
+	err = rlp.Encode(w, callTx)
+	if err != nil {
+		return nil, function, err
+	}
+	txStr := binary.Encode(binary.PrefixTransaction, w.Bytes())
+
+	body := "{\"accounts\":[{\"pub_key\":\""+address+"\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\""+txStr+"\"}]}"
+
+	response := utils.PostBody(NodeURLD + "/v2/debug/transactions/dry-run",body,"application/json")
+	var tryRun TryRun
+	err = json.Unmarshal([]byte(response), &tryRun)
+	if err != nil {
+		return nil, function, err
+	}
+
+	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	return decodeResult, function, err
+}
+
+
+type TryRun struct {
+	Results []Results `json:"results"`
+}
+type CallObj struct {
+	CallerID string `json:"caller_id"`
+	CallerNonce int `json:"caller_nonce"`
+	ContractID string `json:"contract_id"`
+	GasPrice int `json:"gas_price"`
+	GasUsed int `json:"gas_used"`
+	Height int `json:"height"`
+	Log []interface{} `json:"log"`
+	ReturnType string `json:"return_type"`
+	ReturnValue string `json:"return_value"`
+}
+type Results struct {
+	CallObj CallObj `json:"call_obj"`
+	Result string `json:"result"`
+	Type string `json:"type"`
 }
