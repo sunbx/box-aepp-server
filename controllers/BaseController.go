@@ -13,7 +13,7 @@ type BaseController struct {
 
 type ReturnMsg struct {
 	Code  int         `json:"code"`
-	Msg   string      `json:"msg"`
+	Msg   interface{} `json:"msg"`
 	Stime int64       `json:"time"`
 	Data  interface{} `json:"data"`
 }
@@ -33,7 +33,7 @@ func (c *BaseController) SuccessJson(data interface{}) {
 	c.Ctx.WriteString(string(jsons))
 }
 
-func (c *BaseController) ErrorJson(code int, msg string, data interface{}) {
+func (c *BaseController) ErrorJson(code int, msg interface{}, data interface{}) {
 	serviceTime := time.Now().UnixNano() / 1e6
 	res := ReturnMsg{
 		code, msg, serviceTime, data,

@@ -237,26 +237,28 @@ payable contract AMBLockContract =
   //Unlock repayment
   stateful entrypoint unlock(height: int) =
     //The height has not reached to give a hint !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (height > Chain.block_height)
-      require(2 == 1,"Height Error")
+    //if (height > Chain.block_height)
+    //  require(2 == 1,"Height Error")
 
     //The current height has been pledged
     if(!getMapHeightAccount(getMapAccount(Call.caller),height))
       require(2 == 1,"The current height does not exist to unlock")
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if(state.accounts[Call.caller].heights[height].unlock_height < Chain.block_height)
-      require(2 == 1,"The current height does not exist to unlock")
+    //if(state.accounts[Call.caller].heights[height].unlock_height < Chain.block_height)
+    //  require(2 == 1,"The current height is less than the unlock height")
 
 
     if(state.accounts[Call.caller].heights[height].account != Call.caller)
-      require(2 == 1,"account error")
+      require(2 == 1,"Account error")
 
+    let ae_count = state.accounts[Call.caller].heights[height].number
 
     Chain.spend(Call.caller, state.accounts[Call.caller].heights[height].number)
 
     //get or create map accounts
     let map_accounts = getMapAccount(Call.caller)
+
 
     //set data
     let map_accounts = map_accounts{heights = Map.delete(height, map_accounts.heights) , count = map_accounts.count - state.accounts[Call.caller].heights[height].number}
@@ -264,7 +266,7 @@ payable contract AMBLockContract =
     // //Clear the data for the current height
     put( state{ accounts [Call.caller] = map_accounts})
 
-
+    ae_count
 
   //Cntinue repayment
   stateful entrypoint continue_lock(height: int, day : int) =
@@ -272,10 +274,9 @@ payable contract AMBLockContract =
     if(!getMapHeightAccount(getMapAccount(Call.caller),height))
       require(2 == 1,"The current height does not exist to unlock")
 
-
     //Cntinue repayment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if(state.accounts[Call.caller].heights[height].continue_height < Chain.block_height)
-      require(2 == 1,"The current height does not exist to unlock")
+    //if(state.accounts[Call.caller].heights[height].continue_height < Chain.block_height)
+    //  require(2 == 1,"The current height is less than the unlock height")
 
     if(state.accounts[Call.caller].heights[height].account != Call.caller)
       require(2 == 1,"account error")
@@ -287,6 +288,10 @@ payable contract AMBLockContract =
 
     //Get the height when unlocked, used as the key
     let block_height = (Chain.block_height + 480 * day) + (480 * 15)
+
+    if(getMapHeightAccount(getMapAccount(Call.caller),block_height))
+        require(2 == 1,"The current height already exists. Please wait for a few minutes")
+
 
     //Get the height when unlocked, used as the key , The height at which the mine may continue
     let block_height_continue = (Chain.block_height + 480 * day)

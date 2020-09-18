@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/aeternity/aepp-sdk-go/account"
 	"github.com/aeternity/aepp-sdk-go/aeternity"
 	"github.com/aeternity/aepp-sdk-go/binary"
@@ -179,7 +180,9 @@ func CompileContractInit(account *account.Account, name string, number string) (
 }
 
 type CallInfoResult struct {
+
 	CallInfo CallInfo `json:"call_info"`
+	Reason string `json:"reason"`
 }
 type CallInfo struct {
 	ReturnType  string `json:"return_type"`
@@ -204,29 +207,23 @@ func Is1AE(address string) bool {
 func CallContractFunction(account *account.Account, ctID string, function string, args []string, amount float64) (s interface{}, functionEncode string, e error) {
 	n := naet.NewNode(NodeURL, false)
 	//c := naet.NewCompiler("https://compiler.aepps.com", false)
-	c := naet.NewCompiler("http://localhost:3080", false)
+	c := naet.NewCompiler(CompilerURL, false)
 	ctx := aeternity.NewContext(account, n)
 	ctx.SetCompiler(c)
-	if function == "getBalances" {
-		function = "cb_KxH0qmIOP6GXuQs="
-	} else if function == "getDayAccounts" {
-		function = "cb_KxH+AYP0P45zC7A="
-	} else if function == "getTokenBalance" {
-		function = "cb_KxFas8uvP/b2klQ="
-	} else if function == "getContractBalance" {
-		function = "cb_KxFw6hiSP7QFPJ4="
+
+	var callData = function
+	if v, ok := cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
+		callData = v
+		println("123")
 	} else {
 		source, _ := ioutil.ReadFile("contract/AMBLockContract.aes")
-
-		callData, err := ctx.Compiler().EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
-		println(callData)
-		if err != nil {
-			return nil, function, err
-		}
-		function = callData
+		callData, _ = ctx.Compiler().EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
+		println("456")
+		println(function)
 	}
 
-	callTx, err := transactions.NewContractCallTx(ctx.SenderAccount(), ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, function, ctx.TTLNoncer())
+	callTx, err := transactions.NewContractCallTx(ctx.SenderAccount(), ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, ctx.TTLNoncer())
 	if err != nil {
 		return nil, function, err
 	}
@@ -241,22 +238,26 @@ func CallContractFunction(account *account.Account, ctID string, function string
 }
 
 var cacheCallMap = make(map[string]string)
+var cacheResultlMap = make(map[string]interface{})
 
 func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
 	node := naet.NewNode(NodeURL, false)
 	compile := naet.NewCompiler(CompilerURL, false)
 	source, _ := ioutil.ReadFile("contract/AMBLockContract.aes")
 	var callData = function
-	if v, ok := cacheCallMap[function]; ok {
+	if v, ok := cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
 		callData = v
 	} else {
-		callData,_ = compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
-		cacheCallMap[function] = callData
+		callData, _ = compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
 	}
 
-
 	println(callData)
+	println(fmt.Sprintf("%s", args))
 	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
+	if err != nil {
+		return nil, function, err
+	}
 	w := &bytes.Buffer{}
 	err = rlp.Encode(w, callTx)
 	if err != nil {
@@ -264,36 +265,41 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	}
 	txStr := binary.Encode(binary.PrefixTransaction, w.Bytes())
 
-	body := "{\"accounts\":[{\"pub_key\":\""+address+"\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\""+txStr+"\"}]}"
+	body := "{\"accounts\":[{\"pub_key\":\"" + address + "\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\"" + txStr + "\"}]}"
 
-	response := utils.PostBody(NodeURLD + "/v2/debug/transactions/dry-run",body,"application/json")
+	response := utils.PostBody(NodeURLD+"/v2/debug/transactions/dry-run", body, "application/json")
 	var tryRun TryRun
 	err = json.Unmarshal([]byte(response), &tryRun)
 	if err != nil {
 		return nil, function, err
 	}
 
-	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
-	return decodeResult, function, err
-}
+	if v, ok := cacheResultlMap[tryRun.Results[0].CallObj.ReturnValue]; ok {
+		return v, function, err
+	} else {
+		decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+		cacheResultlMap[tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+		return decodeResult, function, err
+	}
 
+}
 
 type TryRun struct {
 	Results []Results `json:"results"`
 }
 type CallObj struct {
-	CallerID string `json:"caller_id"`
-	CallerNonce int `json:"caller_nonce"`
-	ContractID string `json:"contract_id"`
-	GasPrice int `json:"gas_price"`
-	GasUsed int `json:"gas_used"`
-	Height int `json:"height"`
-	Log []interface{} `json:"log"`
-	ReturnType string `json:"return_type"`
-	ReturnValue string `json:"return_value"`
+	CallerID    string        `json:"caller_id"`
+	CallerNonce int           `json:"caller_nonce"`
+	ContractID  string        `json:"contract_id"`
+	GasPrice    int           `json:"gas_price"`
+	GasUsed     int           `json:"gas_used"`
+	Height      int           `json:"height"`
+	Log         []interface{} `json:"log"`
+	ReturnType  string        `json:"return_type"`
+	ReturnValue string        `json:"return_value"`
 }
 type Results struct {
 	CallObj CallObj `json:"call_obj"`
-	Result string `json:"result"`
-	Type string `json:"type"`
+	Result  string  `json:"result"`
+	Type    string  `json:"type"`
 }
