@@ -25,6 +25,8 @@ import (
 var NodeURL = "http://localhost:3013"
 var NodeURLD = "http://localhost:3113"
 var CompilerURL = "http://localhost:3080"
+var ContractABCAddress = "ct_chmLQ9hswEXJdvfw9f6PQF3M44MYhBfmq6jAGib36kJ9p2Lj7"
+var ContractBoxAddress = "ct_dm2gdE177Ctg1xCB39x9sDBTTYMVDWPbQCRUb1fnfQwekKQUh"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -212,11 +214,18 @@ func CallContractFunction(account *account.Account, ctID string, function string
 	ctx.SetCompiler(c)
 
 	var callData = function
+	println("123",account.Address)
 	if v, ok := cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
 		callData = v
-		println("123")
+
 	} else {
-		source, _ := ioutil.ReadFile("contract/AMBLockContract.aes")
+		var source []byte
+		if ctID == ContractBoxAddress{
+			source, _ = ioutil.ReadFile("contract/BoxContract.aes")
+		}else{
+			source, _ = ioutil.ReadFile("contract/AbcContract.aes")
+		}
+
 		callData, _ = ctx.Compiler().EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
 		cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
 		println("456")
@@ -243,7 +252,7 @@ var cacheResultlMap = make(map[string]interface{})
 func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
 	node := naet.NewNode(NodeURL, false)
 	compile := naet.NewCompiler(CompilerURL, false)
-	source, _ := ioutil.ReadFile("contract/AMBLockContract.aes")
+	source, _ := ioutil.ReadFile("contract/BoxContract.aes")
 	var callData = function
 	if v, ok := cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
 		callData = v
@@ -256,6 +265,7 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	println(fmt.Sprintf("%s", args))
 	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
 	if err != nil {
+		println(err.Error())
 		return nil, function, err
 	}
 	w := &bytes.Buffer{}

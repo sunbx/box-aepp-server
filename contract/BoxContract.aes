@@ -75,7 +75,7 @@ payable contract AMBLockContract =
     //Initialize the list of staking accounts that the master cannot unlock
     accounts = {},
     //Initialize the number of digits, 18 digits after the decimal point
-    decimals = 100000000000000000
+    decimals = 1000000000000000000
     }
 
   //Return the balance of the current contract
@@ -184,7 +184,7 @@ payable contract AMBLockContract =
   payable stateful entrypoint lock(day: int) =
 
     //Minimum support 1ae
-    if(Call.value < 1000000000000000)
+    if(Call.value < 100 * state.decimals)
       require(2 == 1, "amount low ")
 
     //Less than 1 day give a hint
@@ -213,11 +213,14 @@ payable contract AMBLockContract =
     //Get the token that is finally given
     let token_number = getMineOutputCount(getBoxTokenNumber(),ledge_count) / 1000
 
-    //Send token
+    //Send Caller Token
     state.token.transfer(Call.caller, token_number)
 
     //Send Team
-    state.token.transfer(ak_2nX6paLFJb5LWraLNQgf9jEi5P4k2XagPcuz4KJXmbSe66hhxZ, token_number * 2 / 10)
+    state.token.transfer(ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK, token_number * 10 / 100)
+
+    //Send Developer
+    state.token.transfer(ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6, token_number * 5 / 100)
 
     //Generate account
     let account = {account = Call.caller, number = Call.value, token_number = token_number, unlock_height = block_height,continue_height = block_height_continue, day = day}
@@ -237,16 +240,16 @@ payable contract AMBLockContract =
   //Unlock repayment
   stateful entrypoint unlock(height: int) =
     //The height has not reached to give a hint !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //if (height > Chain.block_height)
-    //  require(2 == 1,"Height Error")
+    if (height > Chain.block_height)
+      require(2 == 1,"Height Error")
 
     //The current height has been pledged
     if(!getMapHeightAccount(getMapAccount(Call.caller),height))
       require(2 == 1,"The current height does not exist to unlock")
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //if(state.accounts[Call.caller].heights[height].unlock_height < Chain.block_height)
-    //  require(2 == 1,"The current height is less than the unlock height")
+    if(state.accounts[Call.caller].heights[height].unlock_height > Chain.block_height)
+      require(2 == 1,"The current height is less than the unlock height")
 
 
     if(state.accounts[Call.caller].heights[height].account != Call.caller)
@@ -271,12 +274,16 @@ payable contract AMBLockContract =
   //Cntinue repayment
   stateful entrypoint continue_lock(height: int, day : int) =
 
+      //The height has not reached to give a hint !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (height > Chain.block_height)
+      require(2 == 1,"Height Error")
+
     if(!getMapHeightAccount(getMapAccount(Call.caller),height))
       require(2 == 1,"The current height does not exist to unlock")
 
-    //Cntinue repayment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //if(state.accounts[Call.caller].heights[height].continue_height < Chain.block_height)
-    //  require(2 == 1,"The current height is less than the unlock height")
+    //Cntinue repayment
+    if(state.accounts[Call.caller].heights[height].continue_height > Chain.block_height)
+      require(2 == 1,"The current height is less than the continue lock height")
 
     if(state.accounts[Call.caller].heights[height].account != Call.caller)
       require(2 == 1,"account error")
@@ -309,7 +316,10 @@ payable contract AMBLockContract =
     state.token.transfer(Call.caller, token_number)
 
     //Send Team
-    state.token.transfer(ak_2nX6paLFJb5LWraLNQgf9jEi5P4k2XagPcuz4KJXmbSe66hhxZ, token_number * 2 / 10)
+    state.token.transfer(ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK, token_number * 10 / 100)
+
+    //Send Developer
+    state.token.transfer(ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6, token_number * 5 / 100)
 
     //Generate account
     let account = {account = Call.caller, number = state.accounts[Call.caller].heights[height].number, token_number = token_number, unlock_height = block_height,continue_height = block_height_continue, day = day}
