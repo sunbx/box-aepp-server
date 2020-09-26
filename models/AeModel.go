@@ -25,8 +25,8 @@ import (
 var NodeURL = "http://localhost:3013"
 var NodeURLD = "http://localhost:3113"
 var CompilerURL = "http://localhost:3080"
-var ContractABCAddress = "ct_chmLQ9hswEXJdvfw9f6PQF3M44MYhBfmq6jAGib36kJ9p2Lj7"
-var ContractBoxAddress = "ct_dm2gdE177Ctg1xCB39x9sDBTTYMVDWPbQCRUb1fnfQwekKQUh"
+var ContractABCAddress = "ct_2XG6wyPjf46KFY8NCMQDKHbPDkp3HmdovFqgtg4ZQoSLwc6C2b"
+var ContractBoxAddress = "ct_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
