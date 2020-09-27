@@ -482,7 +482,7 @@ func (c *ApiUserInfoController) Post() {
 func (c *ApiContractDecideController) Post() {
 	hash := c.GetString("hash")
 	function := c.GetString("function")
-	ctID := c.GetString("ctID")
+	ctID := c.GetString("ct_id")
 	response := utils.Get(models.NodeURL + "/v2/transactions/" + hash + "/info")
 	var callInfoResult models.CallInfoResult
 	err := json.Unmarshal([]byte(response), &callInfoResult)
@@ -494,16 +494,22 @@ func (c *ApiContractDecideController) Post() {
 		c.ErrorJson(-1, "Tx not mined", JsonData{})
 		return
 	}
+	if ctID == "" {
+		ctID = models.ContractBoxAddress
+	}
 
-	println(response)
-	println(hash)
+
 	compile := naet.NewCompiler("http://localhost:3080", false)
 
 	var source []byte
-	if ctID == ""{
+	if ctID == models.ContractBoxAddress {
 		source, _ = ioutil.ReadFile("contract/BoxContract.aes")
-	}else{
+	} else if ctID == models.ContractBoxOldAddress {
+		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
+	} else if ctID == models.ContractABCAddress {
 		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
+	} else {
+		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 	}
 
 	decodeResult, err := compile.DecodeCallResult(callInfoResult.CallInfo.ReturnType, callInfoResult.CallInfo.ReturnValue, function, string(source), config.Compiler.Backend)
@@ -567,12 +573,16 @@ func (c *ApiContractCallController) Post() {
 
 	signingKey := c.GetString("signingKey")
 	function := c.GetString("function")
+	ctID := c.GetString("ct_id")
 	params := c.GetString("params")
 	amount, _ := c.GetFloat("amount", 0)
 
 	if signingKey == "" {
 		c.ErrorJson(-500, "signingKey error", JsonData{})
 		return
+	}
+	if ctID == "" {
+		ctID = models.ContractBoxAddress
 	}
 
 	if function != "lock" && function != "unlock" && function != "continue_lock" {
@@ -585,17 +595,13 @@ func (c *ApiContractCallController) Post() {
 		return
 	}
 
-
 	account, err := models.SigningKeyHexStringAccount(signingKey)
 	if err != nil {
 		c.ErrorJson(-500, err.Error()+"123123", JsonData{})
 		return
 	}
 	if amount > 0 {
-		if err != nil {
-			c.ErrorJson(-500, err.Error(), JsonData{})
-			return
-		}
+
 		accountNet, err := models.ApiGetAccount(account.Address)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
@@ -611,9 +617,9 @@ func (c *ApiContractCallController) Post() {
 			c.ErrorJson(-500, "token low", JsonData{})
 			return
 		}
-
 	}
-	call, functionEncode, err := models.CallContractFunction(account, models.ContractBoxAddress, function, []string{params}, amount)
+
+	call, functionEncode, err := models.CallContractFunction(account, ctID, function, []string{params}, amount)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -652,13 +658,11 @@ func (c *ApiContractBalanceController) Post() {
 	if ctId == "" {
 		ctId = models.ContractBoxAddress
 	}
-	//println(string(paramsArr[0]))
-	//println(string(paramsArr[1]))
 
 	result, _, err := models.CallStaticContractFunction(address, models.ContractBoxAddress, "getTokenCallerBalance", []string{address})
 
 	if err != nil {
-		if "Error: Account not found" == err.Error(){
+		if "Error: Account not found" == err.Error() {
 			c.SuccessJson(map[string]interface{}{"balance": "0.00000"})
 			return
 		}
@@ -690,27 +694,33 @@ func (c *ApiContractInfoController) Post() {
 	if ctId == "" {
 		ctId = models.ContractBoxAddress
 	}
+	contractResultOld, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxOldAddress, "getContractBalance", []string{})
+	contractBalance64Old, _ := contractResultOld.(json.Number).Float64()
+	myResultOld, _, err2 := models.CallStaticContractFunction(address, models.ContractBoxOldAddress, "getAccountsHeight", []string{address})
+	data := myResultOld.(map[string]interface{})
+
+	myResultOldCount, _ := data["count"].(json.Number).Float64()
 
 	contractResult, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxAddress, "getContractBalance", []string{})
 
 	if err != nil {
-		if "Error: Account not found" == err.Error(){
+		if "Error: Account not found" == err.Error() {
 			c.SuccessJson(map[string]interface{}{"contract_balance": "0.00000", "my_balance": "0.00000"})
 			return
 		}
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
+
 	myResult, _, err2 := models.CallStaticContractFunction(address, models.ContractBoxAddress, "getAccountsHeight", []string{address})
 
-
 	contractBalance64, _ := contractResult.(json.Number).Float64()
-	contractBalance := utils.FormatTokens(contractBalance64, 5)
+	contractBalance := utils.FormatTokens(contractBalance64+contractBalance64Old, 5)
 	if contractBalance == "0" {
 		contractBalance = "0.00000"
 	}
 	if err2 != nil {
-		if "Error: Account not found" == err2.Error(){
+		if "Error: Account not found" == err2.Error() {
 			c.SuccessJson(map[string]interface{}{"contract_balance": contractBalance, "my_balance": "0.00000"})
 			return
 		}
@@ -729,7 +739,7 @@ func (c *ApiContractInfoController) Post() {
 	case map[string]interface{}:
 		data := myResult.(map[string]interface{})
 		balance64, _ := data["count"].(json.Number).Float64()
-		balance := utils.FormatTokens(balance64, 5)
+		balance := utils.FormatTokens(balance64+myResultOldCount, 5)
 		myBalance = balance
 	}
 
@@ -748,13 +758,10 @@ func (c *ApiContractRecordController) Post() {
 		ctId = models.ContractBoxAddress
 	}
 
-	tokens := utils.FormatTokens(500000000000000000000000000, 5)
-	println(tokens)
-
-	myResult, _, err := models.CallStaticContractFunction(address, models.ContractBoxAddress, "getAccountsHeight", []string{address})
+	myResult, _, err := models.CallStaticContractFunction(address, ctId, "getAccountsHeight", []string{address})
 
 	if err != nil {
-		if "Error: Account not found" == err.Error(){
+		if "Error: Account not found" == err.Error() {
 			c.SuccessJson([]JsonData{})
 			return
 		}
@@ -823,23 +830,14 @@ func (c *ApiContractLockController) Post() {
 
 	}
 
-	//println(string(paramsArr[0]))
-	//println(string(paramsArr[1]))
-
 	call, functionEncode, err := models.CallContractFunction(account, models.ContractBoxAddress, "lock", []string{params}, amount)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
-	//tx, err := json.Marshal(&call)
-	//if err != nil {
-	//	c.ErrorJson(-500, err.Error(), JsonData{})
-	//	return
-	//}
-	//c.SuccessJson(call)
+
 	c.SuccessJson(map[string]interface{}{"tx": call, "function": functionEncode})
 }
-
 
 func (c *ApiContractTransferController) Post() {
 
@@ -872,8 +870,7 @@ func (c *ApiContractTransferController) Post() {
 
 	}
 
-
-	call, functionEncode, err := models.CallContractFunction(account, models.ContractABCAddress, "transfer", []string{address,utils.GetRealAebalanceBigInt(amount).String()}, 0)
+	call, functionEncode, err := models.CallContractFunction(account, models.ContractABCAddress, "transfer", []string{address, utils.GetRealAebalanceBigInt(amount).String()}, 0)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return

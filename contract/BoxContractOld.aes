@@ -38,105 +38,82 @@ contract FungibleTokenInterface =
 include "Option.aes"
 include "List.aes"
 
-//ABC mine token contract
-//ABC 质押挖矿合约
-payable contract ABCLockContract =
+//AMB mine token contract
+payable contract AMBLockContract =
 
   //The address and number of users mined, and the mine time
-  //用户的挖矿信息
   record account = {
       //Mined account address
-      //用户的地址
       account: address,
       //The amount of mine
-      //用户质押的AE
       number: int,
       //The amount of mine
-      //用户产出的ABC
       token_number: int,
       //Unlock height
-      //解锁的高度
       unlock_height: int,
       //Continue height
-      //可续期的高度
       continue_height: int,
       //The height of the mine
-      //质押的天数
       day: int}
 
   //Mined user map
-  //用户质押的高度合集
   record map_accounts = {
     heights: map(int, account), count: int}
 
   //state
   record state = {
     //The bound token contract, because it can only operate with the specified contract
-    //ABC的智能合约
     token: FungibleTokenInterface,
     //A collection of mined users, key height, value is the user who lifted the ban on the day
-    //用户合集 , key 是 用户地址,value 是用户的质押高度合集
     accounts: map(address, map_accounts),
     //Digits
-    //ABC位数 ,
     decimals: int}
 
   stateful entrypoint init(token: FungibleTokenInterface) = {
     //The address of the contract to be bound must be determined when initializing, and aex9 should be released first before the contract is released
-    //初始化和接收ABC合约,用于转账等操作
     token = token,
     //Initialize the list of staking accounts that the master cannot unlock
-    //初始化空的用户合集
     accounts = {},
     //Initialize the number of digits, 18 digits after the decimal point
-    //设置ABC的位数 , 一般都是18位
     decimals = 1000000000000000000
     }
 
   //Return the balance of the current contract
-  //获取当前合约已经质押的AE总数量
   stateful entrypoint getContractBalance() =
     Contract.balance
 
   //The address of the current contract
-  //获取当前合约的地址
   stateful entrypoint getContractAddress() =
     Contract.address
 
 
-  //Get the contract balance ABC number
-  //获取当前合约还剩多少ABC没有被挖出
+  //Get the contract balance AMB number
   stateful entrypoint getTokenBalance() =
     state.token.balance(getContractAddress())
 
-  //Get my ABC balance
-  //获取某个账户的ABC 数量
+  //Get my AMB balance
   stateful entrypoint getTokenCallerBalance(addr: address) =
     state.token.balance(addr)
 
   //Get all token information of the aex9 contract
-  //获取ABC合约所有的用户数
   stateful entrypoint getBalances() =
     state.token.balances()
 
   //Get the caller
-  //获取合约的归属者
   stateful entrypoint getCallCaller() =
     Call.caller
 
   //All users mined
-  //获取当前质押中的所有账户
   stateful entrypoint getAccounts() : map(address, map_accounts) =
     state.accounts
 
   //Current mine user record
-  stateful entrypoint getAccountsHeight(addr : address) : map_accounts =
+  entrypoint getAccountsHeight(addr : address) : map_accounts =
     switch(Map.lookup(addr, state.accounts))
       Some(map_accounts) => map_accounts
       None => {heights = {},count = 0}
 
   //Get the total number of boxes that have been dug
-  //获取合约用户已经挖出的ABC数量
   entrypoint getBoxTokenNumber(): int =
     switch(state.token.balance(Contract.address))
       Some(balance) =>
@@ -144,7 +121,6 @@ payable contract ABCLockContract =
       None => 0
 
   //Get the due tokens calculated in days
-  //获取天数对应的奖励
   stateful entrypoint getDayCount(day: int ,number: int): int =
     if(day == 1)
       (number * 10) / 10 * 1
@@ -158,7 +134,6 @@ payable contract ABCLockContract =
       (number * 10) / 10 * 1
 
   //To obtain the total amount of mined ae tokens
-  //获取当前质押数量的奖励
   stateful entrypoint getMineCount(balance: int, number: int): int =
     if( balance >= 30000000 * state.decimals)
       (number * 3) / 10
@@ -178,7 +153,6 @@ payable contract ABCLockContract =
       (number * 10) / 10
 
   //Get the due tokens from mining
-  //获取当前挖矿的token 的奖励
   stateful entrypoint getMineOutputCount(balance_token: int, number: int): int =
     if( balance_token >= 400000000 * state.decimals)
       (number * 1) / 10
@@ -195,6 +169,7 @@ payable contract ABCLockContract =
     else
       (number * 10) / 10
 
+
   private function getMapAccount(addr: address): map_accounts =
     switch(Map.lookup(addr, state.accounts))
       Some(map_accounts) => map_accounts
@@ -205,213 +180,164 @@ payable contract ABCLockContract =
       Some(account) => true
       None => false
 
-  private function getUnLockHeight(day: int): int =
-     (Chain.block_height + 2 * day) + (2 * 2)
-    // (Chain.block_height + 480 * day) + (480 * 15)
-  private function getContinueHeight(day: int): int =
-     (Chain.block_height + 2 * day)
-     //(Chain.block_height + 480 * day)
-
   //Use ae to mine tokens
-  //锁仓
   payable stateful entrypoint lock(day: int) =
 
     //Minimum support 1ae
-    //判断输入的AE 是否小于100,小于100给出提示
-    if(Call.value < 1 * state.decimals)
+    if(Call.value < 100 * state.decimals)
       require(2 == 1, "amount low ")
 
     //Less than 1 day give a hint
-    //判断输入的天数是否小于1天或者大于90天,如果满足给出提示
     if(day < 1 || day > 90)
       require(2 == 1,"Days are not legal")
 
     //Get the height when unlocked, used as the key
-    //通过现在的高度获得解锁的高度 比如 限制高度是 300000 就是 (300000 + 480 * day) + (480 * 15)
-    let block_height = getUnLockHeight(day)
+    let block_height = (Chain.block_height + 480 * day) + (480 * 15)
 
     //Get the height when unlocked, used as the key , The height at which the mine may continue
-    //通过现在的高度获得解锁的高度 比如 限制高度是 300000 就是 (300000 + 480 * day)
-    let block_height_continue = getContinueHeight(day)
+    let block_height_continue = (Chain.block_height + 480 * day)
 
     //The current height has been pledged
-    //判断当前解锁的高度是否已经有正在质押的订单了,如果有给出提示,不让继续质押 ,一般一个区块后就可以继续质押了,防止用户重复质押
     if(getMapHeightAccount(getMapAccount(Call.caller),block_height))
       require(2 == 1,"The current height has been pledged")
 
     // deposit ae into the contract
-    //向合约地址支付输入的AE
     Chain.spend(Contract.address, Call.value)
 
     //Calculate days
-    //根据天数计算倍率
     let day_count = getDayCount(day, Call.value)
 
     //Calculate the mined ae
-    //根据已经质押的ae数量计算倍率
     let ledge_count = getMineCount(getContractBalance(), day_count)
 
     //Get the token that is finally given
-    //根据已经产出计算倍率
     let token_number = getMineOutputCount(getBoxTokenNumber(),ledge_count) / 1000
 
     //Send Caller Token
-    //将计算好的 ABC 发送给用户
     state.token.transfer(Call.caller, token_number)
 
     //Send Team
-    //发送给ABC基金会,用于生态建设
     state.token.transfer(ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK, token_number * 10 / 100)
 
     //Send Developer
-    //发送给开发者团队
     state.token.transfer(ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6, token_number * 5 / 100)
 
     //Generate account
-    //生成用户信息 ,将用户地址, 质押的ae数量,产生的abc 数量,解锁高度,可续期高度,质押天数
     let account = {account = Call.caller, number = Call.value, token_number = token_number, unlock_height = block_height,continue_height = block_height_continue, day = day}
 
     //get or create map accounts
-    //获取当前的当前用户合集,没有的话会重新创建
     let map_accounts = getMapAccount(Call.caller)
 
     //set data
-    //在用户合集里面对应高度下存入改信息
     let map_accounts = map_accounts{heights[block_height] = account , count = map_accounts.count + Call.value}
 
     //storage
-    //存储
     put( state{ accounts [Call.caller] = map_accounts})
 
-    //返回已经得到ABC的数量
     token_number
 
 
   //Unlock repayment
-  //解锁
   stateful entrypoint unlock(height: int) =
-    //The height has not reached to give a hint
-    //判断要解锁的高度是否大于了当前区块的高度
+    //The height has not reached to give a hint !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (height > Chain.block_height)
       require(2 == 1,"Height Error")
 
     //The current height has been pledged
-    //判断当前用户合集下面高度是否有要解锁的数据,如果没有查询到的话给出提示
     if(!getMapHeightAccount(getMapAccount(Call.caller),height))
       require(2 == 1,"The current height does not exist to unlock")
 
-    //判断解锁高度是否大于了区块的高度,如果大于的话给出错误提示,证明还没到解锁时间
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if(state.accounts[Call.caller].heights[height].unlock_height > Chain.block_height)
       require(2 == 1,"The current height is less than the unlock height")
 
-    //判断当前准备解锁的用户是否是调用者,防止其他人解锁自己的账户
+
     if(state.accounts[Call.caller].heights[height].account != Call.caller)
       require(2 == 1,"Account error")
 
-    //获得要解锁的AE数量
     let ae_count = state.accounts[Call.caller].heights[height].number
 
-    //从合约资金池传出到用户地址
     Chain.spend(Call.caller, state.accounts[Call.caller].heights[height].number)
 
     //get or create map accounts
-    //获取当前质押用户合集
     let map_accounts = getMapAccount(Call.caller)
 
+
     //set data
-    //更新数据
     let map_accounts = map_accounts{heights = Map.delete(height, map_accounts.heights) , count = map_accounts.count - state.accounts[Call.caller].heights[height].number}
 
     // //Clear the data for the current height
-    //保存数据
     put( state{ accounts [Call.caller] = map_accounts})
 
-    //返回解锁的ae数量
     ae_count
 
   //Cntinue repayment
   stateful entrypoint continue_lock(height: int, day : int) =
 
-    //判断当前用户合集下面高度是否有要解锁的数据,如果没有查询到的话给出提示
+      //The height has not reached to give a hint !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (height > Chain.block_height)
+      require(2 == 1,"Height Error")
+
     if(!getMapHeightAccount(getMapAccount(Call.caller),height))
       require(2 == 1,"The current height does not exist to unlock")
 
     //Cntinue repayment
-    //判断可续期高度是否大于了区块的高度,如果大于的话给出错误提示,证明还没到解锁时间
     if(state.accounts[Call.caller].heights[height].continue_height > Chain.block_height)
       require(2 == 1,"The current height is less than the continue lock height")
 
-    //判断当前准备解锁的用户是否是调用者,防止其他人解锁自己的账户
     if(state.accounts[Call.caller].heights[height].account != Call.caller)
-      require(2 == 1,"Account error")
+      require(2 == 1,"account error")
 
 
     //Less than 1 day give a hint
-    //判断输入的天数是否小于1天或者大于90天,如果满足给出提示
     if(day < 1 || day > 90)
       require(2 == 1,"Days are not legal")
 
     //Get the height when unlocked, used as the key
-    //通过现在的高度获得解锁的高度 比如 限制高度是 300000 就是 (300000 + 480 * day) + (480 * 15)
-    let block_height = getUnLockHeight(day)
+    let block_height = (Chain.block_height + 480 * day) + (480 * 15)
 
-    //判断当前解锁的高度是否已经有正在质押的订单了,如果有给出提示,不让继续质押 ,一般一个区块后就可以继续质押了,防止用户重复质押
     if(getMapHeightAccount(getMapAccount(Call.caller),block_height))
         require(2 == 1,"The current height already exists. Please wait for a few minutes")
 
 
     //Get the height when unlocked, used as the key , The height at which the mine may continue
-    //通过现在的高度获得解锁的高度 比如 限制高度是 300000 就是 (300000 + 480 * day)
-    let block_height_continue = getContinueHeight(day)
+    let block_height_continue = (Chain.block_height + 480 * day)
 
     //Calculate days
-    //根据天数计算倍率
     let day_count = getDayCount(day, state.accounts[Call.caller].heights[height].number)
 
     //Calculate the mined ae
-    //根据已经质押的ae数量计算倍率
     let ledge_count = getMineCount(getContractBalance(), day_count)
 
     //Get the token that is finally given
-    //根据已经产出计算倍率
     let token_number = getMineOutputCount(getBoxTokenNumber(),ledge_count) / 1000
 
     //Send token
-    //将续期天数应得的ABC
     state.token.transfer(Call.caller, token_number)
 
     //Send Team
-    //发送给ABC基金会
     state.token.transfer(ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK, token_number * 10 / 100)
 
     //Send Developer
-    //发送给开发者
     state.token.transfer(ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6, token_number * 5 / 100)
 
     //Generate account
-    //生成新的用户信息存储
     let account = {account = Call.caller, number = state.accounts[Call.caller].heights[height].number, token_number = token_number, unlock_height = block_height,continue_height = block_height_continue, day = day}
 
     //get or create map accounts
-    //获取当前用户合集
     let map_accounts = getMapAccount(Call.caller)
 
     //delete old height data
-    //删除之前高度的数据
     let heights = Map.delete(height, map_accounts.heights)
 
     //set new heights
-    //在新的高度设置数据
     let map_accounts = map_accounts{heights = heights}
 
     //set data
-    //设置用户
     let map_accounts = map_accounts{heights[block_height] = account}
 
     //storage
-    //存储
     put( state{ accounts [Call.caller] = map_accounts})
 
-    //返回挖出的ABC数量
     token_number
 

@@ -13,7 +13,6 @@ import (
 	"github.com/aeternity/aepp-sdk-go/naet"
 	"github.com/aeternity/aepp-sdk-go/swagguard/node/models"
 	"github.com/aeternity/aepp-sdk-go/transactions"
-	rlp "github.com/randomshinichi/rlpae"
 	"github.com/tyler-smith/go-bip39"
 	"io/ioutil"
 	"math/big"
@@ -25,13 +24,16 @@ import (
 var NodeURL = "http://localhost:3013"
 var NodeURLD = "http://localhost:3113"
 var CompilerURL = "http://localhost:3080"
-var ContractABCAddress = "ct_2XG6wyPjf46KFY8NCMQDKHbPDkp3HmdovFqgtg4ZQoSLwc6C2b"
-var ContractBoxAddress = "ct_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv"
+
+//var ContractABCAddress = "ct_2XG6wyPjf46KFY8NCMQDKHbPDkp3HmdovFqgtg4ZQoSLwc6C2b"
+var ContractABCAddress = "ct_2dBosx2mVrMDh1ys3YKHjBaUbR9bKK5PiyibANntS2g3jf7jV1"
+
+var ContractBoxOldAddress = "ct_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv"
+var ContractBoxAddress = "ct_WnjujdGG63nPgbqw26h4nXtoDhLpb4ztLwXhxoH1Rja3rCQWD"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
 func MnemonicAccount(mnemonic string) (*account.Account, error) {
-
 	seed, err := account.ParseMnemonic(mnemonic)
 	if err != nil {
 		return nil, err
@@ -182,9 +184,8 @@ func CompileContractInit(account *account.Account, name string, number string) (
 }
 
 type CallInfoResult struct {
-
 	CallInfo CallInfo `json:"call_info"`
-	Reason string `json:"reason"`
+	Reason   string   `json:"reason"`
 }
 type CallInfo struct {
 	ReturnType  string `json:"return_type"`
@@ -208,28 +209,26 @@ func Is1AE(address string) bool {
 
 func CallContractFunction(account *account.Account, ctID string, function string, args []string, amount float64) (s interface{}, functionEncode string, e error) {
 	n := naet.NewNode(NodeURL, false)
-	//c := naet.NewCompiler("https://compiler.aepps.com", false)
 	c := naet.NewCompiler(CompilerURL, false)
 	ctx := aeternity.NewContext(account, n)
 	ctx.SetCompiler(c)
 
 	var callData = function
-	println("123",account.Address)
 	if v, ok := cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
 		callData = v
-
 	} else {
 		var source []byte
-		if ctID == ContractBoxAddress{
+		if ctID == ContractBoxAddress {
 			source, _ = ioutil.ReadFile("contract/BoxContract.aes")
-		}else{
+		} else if ctID == ContractBoxOldAddress {
+			source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
+		} else if ctID == ContractABCAddress {
 			source, _ = ioutil.ReadFile("contract/AbcContract.aes")
+		}else{
+			source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 		}
-
 		callData, _ = ctx.Compiler().EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
 		cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
-		println("456")
-		println(function)
 	}
 
 	callTx, err := transactions.NewContractCallTx(ctx.SenderAccount(), ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, ctx.TTLNoncer())
@@ -243,7 +242,6 @@ func CallContractFunction(account *account.Account, ctID string, function string
 	}
 
 	return callReceipt.Hash, function, err
-	//return decodeResult, err
 }
 
 var cacheCallMap = make(map[string]string)
@@ -252,27 +250,32 @@ var cacheResultlMap = make(map[string]interface{})
 func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
 	node := naet.NewNode(NodeURL, false)
 	compile := naet.NewCompiler(CompilerURL, false)
-	source, _ := ioutil.ReadFile("contract/BoxContract.aes")
-	var callData = function
+	var source []byte
+	if ctID != ContractBoxAddress {
+		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
+	} else {
+		source, _ = ioutil.ReadFile("contract/BoxContract.aes")
+	}
+
+	var callData = ""
 	if v, ok := cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
 		callData = v
 	} else {
 		callData, _ = compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+
 		cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
 	}
 
-	println(callData)
-	println(fmt.Sprintf("%s", args))
 	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
 	if err != nil {
-		println(err.Error())
 		return nil, function, err
 	}
 	w := &bytes.Buffer{}
-	err = rlp.Encode(w, callTx)
+	err = callTx.EncodeRLP(w)
 	if err != nil {
 		return nil, function, err
 	}
+
 	txStr := binary.Encode(binary.PrefixTransaction, w.Bytes())
 
 	body := "{\"accounts\":[{\"pub_key\":\"" + address + "\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\"" + txStr + "\"}]}"
