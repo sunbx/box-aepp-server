@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type BlockTopController struct {
@@ -72,6 +73,9 @@ type ApiTransferAddController struct {
 	BaseController
 }
 type ApiUserInfoController struct {
+	BaseController
+}
+type ApiVersionController struct {
 	BaseController
 }
 type ApiContractCallController struct {
@@ -478,6 +482,10 @@ func (c *ApiUserInfoController) Post() {
 	}
 	c.Ctx.WriteString(string(body))
 }
+func (c *ApiVersionController) Post() {
+	source, _ := ioutil.ReadFile("conf/version")
+	c.Ctx.WriteString(string(source))
+}
 
 func (c *ApiContractDecideController) Post() {
 	hash := c.GetString("hash")
@@ -497,7 +505,6 @@ func (c *ApiContractDecideController) Post() {
 	if ctID == "" {
 		ctID = models.ContractBoxAddress
 	}
-
 
 	compile := naet.NewCompiler("http://localhost:3080", false)
 
@@ -694,12 +701,19 @@ func (c *ApiContractInfoController) Post() {
 	if ctId == "" {
 		ctId = models.ContractBoxAddress
 	}
-	contractResultOld, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxOldAddress, "getContractBalance", []string{})
-	contractBalance64Old, _ := contractResultOld.(json.Number).Float64()
-	myResultOld, _, err2 := models.CallStaticContractFunction(address, models.ContractBoxOldAddress, "getAccountsHeight", []string{address})
-	data := myResultOld.(map[string]interface{})
+	var contractBalance64Old = 0.0
+	var myResultOldCount = 0.0
 
-	myResultOldCount, _ := data["count"].(json.Number).Float64()
+
+	contractResultOld, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxOldAddress, "getContractBalance", []string{})
+	contractBalance64Old, _ = contractResultOld.(json.Number).Float64()
+
+	if strings.Contains("ak_2g2yq6RniwW1cjKRu4HdVVQXa5GQZkBaXiaVogQXnRxUKpmhS\",270824000000000000000],	[\"ak_3i4bwAbXBRHBqTDYFVLUSa8byQUeBAFzEgjfYk6rSyjWEXL3i\",259200000000000000000],	[\"ak_9XhfcrCtEyPFWPM3GVPC2BCFqetcYV3fDv3EjPpVdR9juAofA\",129600000000000000000],	[\"ak_ELsVMRbBe4LWEuqNU1pn2UCNpnNfdpHjRJjDFjT4R4yzRTeXt\",1390979520000000015854],	[\"ak_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv\",499977516107119999999972654],	[\"ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH\",0],	[\"ak_QyFYYpgJ1vUGk1Lnk8d79WJEVcAtcfuNHqquuP2ADfxsL6yKx\",321088000000000000000],	[\"ak_V9SApNmgDGNLQcZWTzYb3PKtmFuwRn8ENdAg7WjZUdiwgkyUP\",84384000000000000000],	[\"ak_XtJGJrJuvxduT1HFMye4PuEkfUnU9L5rUE5CQ2F9MkqYQVr3f\",648000000000000000000],	[\"ak_fGPGYbqkEyWMV8R4tvQZznpzt28jb54EinF84TRSVCi997kiJ\",2448000000000000000],	[\"ak_o27hkgCTN2WZBkHd4vPcbfJPM2tzddv8xy1yaQnoyFEvqpZQK\",3596400000000000000],	[\"ak_tM5FE5HZSxUvDNAcBKMpSM9iXdsLviJ6tXffiH3BNpFrvgRoR\",383304960000000000000],	[\"ak_22HBW4s8HoCSa6ZKkd7CtFhs7vdBQ5Sgahi7FbRhp7xQ429WG2\",301216320000000007927],	[\"ak_25rsqRgVpcaD3fSZxCQVcyi4VNK3CTqf8CbzsnGtHCeu3ivrM1\",842670000000000000000],	[\"ak_281fyU5kV5yG6ZEgV9nnprLxRznSUKzxmgn2ZnxBhfD8ryWcuk\",128952000000000000000],	[\"ak_28LuZ8CG4LF6LvL47seA2GuCtaNEdXKiVMZP46ykYW8bEcuoVg\",13219200000000000000000],	[\"ak_294D9LQa95ckuJi5z7Who4TzKZWwEGimsyv1ZKM7osPE9c8Bx7\",521424000000000000000],	[\"ak_2JJNMYcnqPaABiSY5omockmv4cCoZefv4XzStAxKe9gM2xYz2r\",582912000000000000000],	[\"ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6\",977560560000000001188],	[\"ak_2UCUD59aWZyyhZzZbUdxoyP94r3mz9GvkH49HzJjsfC8MYqVPn\",81000000000000000000],	[\"ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK\",1955121120000000002377],	[\"ak_2gEL91xaQwvdN7psiCcGpSwcEMctTX1CVMT2g8f6NEp48tkvAr\",133164000000000000000],	[\"ak_2j2iyGwDnmiDZC9Dc2T8W371MYD9CQxDGSZ2Ne7WT2thY6q888\",213984000000000000000],	[\"ak_2mhBmzVv82SvtKATNBxfD1JhbLBrRNZZmah3QMqRkcK1SP3Bka\",33264000000000000000]",address){
+		myResultOld, _, _ := models.CallStaticContractFunction(address, models.ContractBoxOldAddress, "getAccountsHeight", []string{address})
+		data := myResultOld.(map[string]interface{})
+		myResultOldCount, _ = data["count"].(json.Number).Float64()
+	}
+
 
 	contractResult, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxAddress, "getContractBalance", []string{})
 

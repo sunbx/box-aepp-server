@@ -59,7 +59,7 @@ func init() {
 
 	//ApiNamesPriceController
 	beego.Router("/api/user/info", &controllers.ApiUserInfoController{})
-
+	beego.Router("/api/version", &controllers.ApiVersionController{})
 	//ApiNamesPriceController
 	beego.Router("/api/contract/call", &controllers.ApiContractCallController{})
 

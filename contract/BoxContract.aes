@@ -206,10 +206,12 @@ payable contract ABCLockContract =
       None => false
 
   private function getUnLockHeight(day: int): int =
-     (Chain.block_height + 2 * day) + (2 * 2)
-    // (Chain.block_height + 480 * day) + (480 * 15)
+    (Chain.block_height + 480 * day) + (480 * 15)
+     //(Chain.block_height + 2 * day) + (2 * 2)
+    //
   private function getContinueHeight(day: int): int =
-     (Chain.block_height + 2 * day)
+    (Chain.block_height + 480 * day)
+     //(Chain.block_height + 2 * day)
      //(Chain.block_height + 480 * day)
 
   //Use ae to mine tokens
@@ -218,7 +220,7 @@ payable contract ABCLockContract =
 
     //Minimum support 1ae
     //判断输入的AE 是否小于100,小于100给出提示
-    if(Call.value < 1 * state.decimals)
+    if(Call.value < 100 * state.decimals)
       require(2 == 1, "amount low ")
 
     //Less than 1 day give a hint
