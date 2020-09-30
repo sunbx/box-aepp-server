@@ -90,7 +90,9 @@ func GetRealAebalanceBigInt(amount float64) *big.Int {
 func GetRealAebalanceFloat64(amount float64) float64 {
 	return amount * 1000000000000000000
 }
-
+func GetAEFloat64(amount float64) float64 {
+	return amount / 1000000000000000000
+}
 func AesEncrypt(orig string, key string) string {
 	// 转成字节数组
 	origData := []byte(orig)

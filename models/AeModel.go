@@ -251,10 +251,14 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	node := naet.NewNode(NodeURL, false)
 	compile := naet.NewCompiler(CompilerURL, false)
 	var source []byte
-	if ctID != ContractBoxAddress {
-		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
-	} else {
+	if ctID == ContractBoxAddress {
 		source, _ = ioutil.ReadFile("contract/BoxContract.aes")
+	} else if ctID == ContractBoxOldAddress {
+		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
+	} else if ctID == ContractABCAddress {
+		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
+	}else{
+		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 	}
 
 	var callData = ""

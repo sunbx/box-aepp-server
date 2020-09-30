@@ -75,6 +75,7 @@ func init() {
 	beego.Router("/api/contract/info", &controllers.ApiContractInfoController{})
 
 	beego.Router("/api/contract/record", &controllers.ApiContractRecordController{})
+	beego.Router("/api/contract/ranking", &controllers.ApiContractRankingController{})
 
 	beego.Router("/api/contract/lock", &controllers.ApiContractLockController{})
 	beego.Router("/api/contract/unlock", &controllers.ApiContractDecideController{})
