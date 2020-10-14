@@ -882,9 +882,9 @@ func (c *ApiContractRankingController) Post() {
 		var items []Ranking
 		for i := 0; i < len(data); i++ {
 
-			//if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH"  || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK"  || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
-			//	continue
-			//}
+			if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH"  || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK"  || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
+				continue
+			}
 
 			var item = Ranking{}
 			item.Address = data[i].([]interface{})[0].(string)
