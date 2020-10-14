@@ -82,6 +82,7 @@ func init() {
 	beego.Router("/api/contract/continue", &controllers.ApiContractDecideController{})
 
 	beego.Router("/api/contract/transfer", &controllers.ApiContractTransferController{})
+	beego.Router("/test", &controllers.TESTController{})
 
 
 

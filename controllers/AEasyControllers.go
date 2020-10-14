@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"box/models"
+	. "box/models"
 	"box/utils"
 	"encoding/json"
 	"fmt"
@@ -91,6 +91,9 @@ type ApiContractDecideController struct {
 type ApiContractTransferController struct {
 	BaseController
 }
+type TESTController struct {
+	BaseController
+}
 type ApiContractBalanceController struct {
 	BaseController
 }
@@ -128,6 +131,14 @@ func (c *BlockTopController) Post() {
 	}
 	c.Ctx.WriteString(string(body))
 }
+
+
+
+
+func (c *TESTController) Get() {
+}
+
+
 func (c *NamesBaseController) Post() {
 	resp, err := http.PostForm(HOST+"/api/names/base",
 		url.Values{
@@ -173,6 +184,13 @@ func (c *ApiBaseDataController) Post() {
 
 func (c *ApiLoginController) Post() {
 	mnemonic := c.GetString("mnemonic")
+	split := strings.Split(mnemonic, " ")
+	for i := 0; i < len(split); i++ {
+		if len(split[i])<=1{
+			c.ErrorJson(-500, "mnemonic error", JsonData{})
+			return
+		}
+	}
 	resp, err := http.PostForm(HOST+"/api/user/login",
 		url.Values{
 			"app_id":   {beego.AppConfig.String("AEASY::appId")},
@@ -495,8 +513,8 @@ func (c *ApiContractDecideController) Post() {
 	hash := c.GetString("hash")
 	function := c.GetString("function")
 	ctID := c.GetString("ct_id")
-	response := utils.Get(models.NodeURL + "/v2/transactions/" + hash + "/info")
-	var callInfoResult models.CallInfoResult
+	response := utils.Get(NodeURL + "/v2/transactions/" + hash + "/info")
+	var callInfoResult CallInfoResult
 	err := json.Unmarshal([]byte(response), &callInfoResult)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -507,17 +525,17 @@ func (c *ApiContractDecideController) Post() {
 		return
 	}
 	if ctID == "" {
-		ctID = models.ContractBoxAddress
+		ctID = ContractBoxAddress
 	}
 
 	compile := naet.NewCompiler("http://localhost:3080", false)
 
 	var source []byte
-	if ctID == models.ContractBoxAddress {
+	if ctID == ContractBoxAddress {
 		source, _ = ioutil.ReadFile("contract/BoxContract.aes")
-	} else if ctID == models.ContractBoxOldAddress {
+	} else if ctID == ContractBoxOldAddress {
 		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
-	} else if ctID == models.ContractABCAddress {
+	} else if ctID == ContractABCAddress {
 		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
 	} else {
 		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
@@ -593,7 +611,7 @@ func (c *ApiContractCallController) Post() {
 		return
 	}
 	if ctID == "" {
-		ctID = models.ContractBoxAddress
+		ctID = ContractBoxAddress
 	}
 
 	if function != "lock" && function != "unlock" && function != "continue_lock" {
@@ -606,14 +624,14 @@ func (c *ApiContractCallController) Post() {
 		return
 	}
 
-	account, err := models.SigningKeyHexStringAccount(signingKey)
+	account, err := SigningKeyHexStringAccount(signingKey)
 	if err != nil {
 		c.ErrorJson(-500, err.Error()+"123123", JsonData{})
 		return
 	}
 	if amount > 0 {
 
-		accountNet, err := models.ApiGetAccount(account.Address)
+		accountNet, err := ApiGetAccount(account.Address)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
@@ -630,7 +648,7 @@ func (c *ApiContractCallController) Post() {
 		}
 	}
 
-	call, functionEncode, err := models.CallContractFunction(account, ctID, function, []string{params}, amount)
+	call, functionEncode, err := CallContractFunction(account, ctID, function, []string{params}, amount)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -647,7 +665,7 @@ func (c *ApiContractCallStaticController) Post() {
 	//println(string(paramsArr[0]))
 	//println(string(paramsArr[1]))
 
-	call, functionEncode, err := models.CallStaticContractFunction(address, models.ContractBoxAddress, function, []string{params})
+	call, functionEncode, err := CallStaticContractFunction(address, ContractBoxAddress, function, []string{params})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -667,10 +685,10 @@ func (c *ApiContractBalanceController) Post() {
 	address := c.GetString("address")
 
 	if ctId == "" {
-		ctId = models.ContractBoxAddress
+		ctId = ContractBoxAddress
 	}
 
-	result, _, err := models.CallStaticContractFunction(address, models.ContractBoxAddress, "getTokenCallerBalance", []string{address})
+	result, _, err := CallStaticContractFunction(address, ContractBoxAddress, "getTokenCallerBalance", []string{address})
 
 	if err != nil {
 		if "Error: Account not found" == err.Error() {
@@ -703,21 +721,21 @@ func (c *ApiContractInfoController) Post() {
 	address := c.GetString("address")
 
 	if ctId == "" {
-		ctId = models.ContractBoxAddress
+		ctId = ContractBoxAddress
 	}
 	var contractBalance64Old = 0.0
 	var myResultOldCount = 0.0
 
-	contractResultOld, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxOldAddress, "getContractBalance", []string{})
+	contractResultOld, _, err := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxOldAddress, "getContractBalance", []string{})
 	contractBalance64Old, _ = contractResultOld.(json.Number).Float64()
 
 	if strings.Contains("ak_2g2yq6RniwW1cjKRu4HdVVQXa5GQZkBaXiaVogQXnRxUKpmhS\",270824000000000000000],	[\"ak_3i4bwAbXBRHBqTDYFVLUSa8byQUeBAFzEgjfYk6rSyjWEXL3i\",259200000000000000000],	[\"ak_9XhfcrCtEyPFWPM3GVPC2BCFqetcYV3fDv3EjPpVdR9juAofA\",129600000000000000000],	[\"ak_ELsVMRbBe4LWEuqNU1pn2UCNpnNfdpHjRJjDFjT4R4yzRTeXt\",1390979520000000015854],	[\"ak_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv\",499977516107119999999972654],	[\"ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH\",0],	[\"ak_QyFYYpgJ1vUGk1Lnk8d79WJEVcAtcfuNHqquuP2ADfxsL6yKx\",321088000000000000000],	[\"ak_V9SApNmgDGNLQcZWTzYb3PKtmFuwRn8ENdAg7WjZUdiwgkyUP\",84384000000000000000],	[\"ak_XtJGJrJuvxduT1HFMye4PuEkfUnU9L5rUE5CQ2F9MkqYQVr3f\",648000000000000000000],	[\"ak_fGPGYbqkEyWMV8R4tvQZznpzt28jb54EinF84TRSVCi997kiJ\",2448000000000000000],	[\"ak_o27hkgCTN2WZBkHd4vPcbfJPM2tzddv8xy1yaQnoyFEvqpZQK\",3596400000000000000],	[\"ak_tM5FE5HZSxUvDNAcBKMpSM9iXdsLviJ6tXffiH3BNpFrvgRoR\",383304960000000000000],	[\"ak_22HBW4s8HoCSa6ZKkd7CtFhs7vdBQ5Sgahi7FbRhp7xQ429WG2\",301216320000000007927],	[\"ak_25rsqRgVpcaD3fSZxCQVcyi4VNK3CTqf8CbzsnGtHCeu3ivrM1\",842670000000000000000],	[\"ak_281fyU5kV5yG6ZEgV9nnprLxRznSUKzxmgn2ZnxBhfD8ryWcuk\",128952000000000000000],	[\"ak_28LuZ8CG4LF6LvL47seA2GuCtaNEdXKiVMZP46ykYW8bEcuoVg\",13219200000000000000000],	[\"ak_294D9LQa95ckuJi5z7Who4TzKZWwEGimsyv1ZKM7osPE9c8Bx7\",521424000000000000000],	[\"ak_2JJNMYcnqPaABiSY5omockmv4cCoZefv4XzStAxKe9gM2xYz2r\",582912000000000000000],	[\"ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6\",977560560000000001188],	[\"ak_2UCUD59aWZyyhZzZbUdxoyP94r3mz9GvkH49HzJjsfC8MYqVPn\",81000000000000000000],	[\"ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK\",1955121120000000002377],	[\"ak_2gEL91xaQwvdN7psiCcGpSwcEMctTX1CVMT2g8f6NEp48tkvAr\",133164000000000000000],	[\"ak_2j2iyGwDnmiDZC9Dc2T8W371MYD9CQxDGSZ2Ne7WT2thY6q888\",213984000000000000000],	[\"ak_2mhBmzVv82SvtKATNBxfD1JhbLBrRNZZmah3QMqRkcK1SP3Bka\",33264000000000000000]", address) {
-		myResultOld, _, _ := models.CallStaticContractFunction(address, models.ContractBoxOldAddress, "getAccountsHeight", []string{address})
+		myResultOld, _, _ := CallStaticContractFunction(address, ContractBoxOldAddress, "getAccountsHeight", []string{address})
 		data := myResultOld.(map[string]interface{})
 		myResultOldCount, _ = data["count"].(json.Number).Float64()
 	}
 
-	contractResult, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ContractBoxAddress, "getContractBalance", []string{})
+	contractResult, _, err := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxAddress, "getContractBalance", []string{})
 
 	if err != nil {
 		if "Error: Account not found" == err.Error() {
@@ -728,7 +746,7 @@ func (c *ApiContractInfoController) Post() {
 		return
 	}
 
-	myResult, _, err2 := models.CallStaticContractFunction(address, models.ContractBoxAddress, "getAccountsHeight", []string{address})
+	myResult, _, err2 := CallStaticContractFunction(address, ContractBoxAddress, "getAccountsHeight", []string{address})
 
 	contractBalance64, _ := contractResult.(json.Number).Float64()
 	contractBalance := utils.FormatTokens(contractBalance64+contractBalance64Old, 5)
@@ -771,10 +789,10 @@ func (c *ApiContractRecordController) Post() {
 	address := c.GetString("address")
 
 	if ctId == "" {
-		ctId = models.ContractBoxAddress
+		ctId = ContractBoxAddress
 	}
 
-	myResult, _, err := models.CallStaticContractFunction(address, ctId, "getAccountsHeight", []string{address})
+	myResult, _, err := CallStaticContractFunction(address, ctId, "getAccountsHeight", []string{address})
 
 	if err != nil {
 		if "Error: Account not found" == err.Error() {
@@ -784,7 +802,7 @@ func (c *ApiContractRecordController) Post() {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
-	blockHeight := models.ApiBlocksTop()
+	blockHeight := ApiBlocksTop()
 	switch myResult.(type) {
 	case map[string]interface{}:
 		data := myResult.(map[string]interface{})
@@ -832,10 +850,10 @@ func (c *ApiContractRankingController) Post() {
 	ctId := c.GetString("ct_id")
 
 	if ctId == "" {
-		ctId = models.ContractABCAddress
+		ctId = ContractABCAddress
 	}
 
-	result, _, err := models.CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", models.ContractBoxAddress, "getTokenCallerBalance", []string{"ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T"})
+	result, _, err := CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", ContractBoxAddress, "getTokenCallerBalance", []string{"ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T"})
 	var output = 0.0
 	switch result.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
 	case map[string]interface{}:
@@ -845,7 +863,7 @@ func (c *ApiContractRankingController) Post() {
 		output = 500000000*1000000000000000000 - output
 	}
 
-	myResult, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ctId, "balances", []string{})
+	myResult, _, err := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ctId, "balances", []string{})
 	if err != nil {
 		if "Error: Account not found" == err.Error() {
 			c.SuccessJson([]JsonData{})
@@ -864,9 +882,9 @@ func (c *ApiContractRankingController) Post() {
 		var items []Ranking
 		for i := 0; i < len(data); i++ {
 
-			if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH"  || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK"  || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
-				continue
-			}
+			//if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH"  || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK"  || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
+			//	continue
+			//}
 
 			var item = Ranking{}
 			item.Address = data[i].([]interface{})[0].(string)
@@ -908,14 +926,14 @@ func (c *ApiContractLockController) Post() {
 	params := c.GetString("params")
 	amount, _ := c.GetFloat("amount", 0)
 
-	account, err := models.SigningKeyHexStringAccount(signingKey)
+	account, err := SigningKeyHexStringAccount(signingKey)
 	if amount > 0 {
 
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
 		}
-		accountNet, err := models.ApiGetAccount(account.Address)
+		accountNet, err := ApiGetAccount(account.Address)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
@@ -933,7 +951,7 @@ func (c *ApiContractLockController) Post() {
 
 	}
 
-	call, functionEncode, err := models.CallContractFunction(account, models.ContractBoxAddress, "lock", []string{params}, amount)
+	call, functionEncode, err := CallContractFunction(account, ContractBoxAddress, "lock", []string{params}, amount)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -948,14 +966,14 @@ func (c *ApiContractTransferController) Post() {
 	address := c.GetString("address")
 	amount, _ := c.GetFloat("amount", 0)
 
-	account, err := models.SigningKeyHexStringAccount(signingKey)
+	account, err := SigningKeyHexStringAccount(signingKey)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
 	if amount > 0 {
 
-		accountNet, err := models.ApiGetAccount(account.Address)
+		accountNet, err := ApiGetAccount(account.Address)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
@@ -973,7 +991,7 @@ func (c *ApiContractTransferController) Post() {
 
 	}
 
-	call, functionEncode, err := models.CallContractFunction(account, models.ContractABCAddress, "transfer", []string{address, utils.GetRealAebalanceBigInt(amount).String()}, 0)
+	call, functionEncode, err := CallContractFunction(account, ContractABCAddress, "transfer", []string{address, utils.GetRealAebalanceBigInt(amount).String()}, 0)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
