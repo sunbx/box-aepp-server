@@ -18,14 +18,11 @@ func init() {
 	//所有域名基础信息
 	beego.Router("/api/names/base", &controllers.NamesBaseController{})
 
-	//aeasy login
-	beego.Router("/api/user/login", &controllers.ApiLoginController{})
-
-	//aeasy register
-	beego.Router("/api/user/register", &controllers.ApiRegisterController{})
-
 	//转账
 	beego.Router("/api/wallet/transfer", &controllers.WalletTransferController{})
+
+	//广播
+	beego.Router("/api/tx/broadcast", &controllers.TxBroadcastController{})
 
 	//aeasy register
 	beego.Router("/api/wallet/transfer/record", &controllers.ApiWalletTransferRecordController{})

@@ -3,11 +3,14 @@ package controllers
 import (
 	. "box/models"
 	"box/utils"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/aeternity/aepp-sdk-go/config"
 	"github.com/aeternity/aepp-sdk-go/naet"
 	"github.com/astaxie/beego"
+	rlp "github.com/randomshinichi/rlpae"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -39,6 +42,9 @@ type ApiWalletTransferRecordController struct {
 	BaseController
 }
 type WalletTransferController struct {
+	BaseController
+}
+type TxBroadcastController struct {
 	BaseController
 }
 
@@ -132,12 +138,8 @@ func (c *BlockTopController) Post() {
 	c.Ctx.WriteString(string(body))
 }
 
-
-
-
 func (c *TESTController) Get() {
 }
-
 
 func (c *NamesBaseController) Post() {
 	resp, err := http.PostForm(HOST+"/api/names/base",
@@ -186,7 +188,7 @@ func (c *ApiLoginController) Post() {
 	mnemonic := c.GetString("mnemonic")
 	split := strings.Split(mnemonic, " ")
 	for i := 0; i < len(split); i++ {
-		if len(split[i])<=1{
+		if len(split[i]) <= 1 {
 			c.ErrorJson(-500, "mnemonic error", JsonData{})
 			return
 		}
@@ -234,17 +236,40 @@ func (c *ApiWalletTransferRecordController) Post() {
 }
 
 func (c *WalletTransferController) Post() {
-	amount := c.GetString("amount")
-	address := c.GetString("address")
-	signingKey := c.GetString("signingKey")
 	data := c.GetString("data")
+	senderID := c.GetString("senderID")
+	recipientID := c.GetString("recipientID")
+	amount := c.GetString("amount")
 	resp, err := http.PostForm(HOST+"/api/wallet/transfer",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"address":    {address},
-			"amount":     {amount},
-			"signingKey": {signingKey},
-			"data":       {data},
+			"app_id":      {beego.AppConfig.String("AEASY::appId")},
+			"senderID":    {senderID},
+			"amount":      {amount},
+			"recipientID": {recipientID},
+			"data":        {data},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+func (c *TxBroadcastController) Post() {
+	signature := c.GetString("signature")
+	tx := c.GetString("tx")
+	resp, err := http.PostForm(HOST+"/api/tx/broadcast",
+		url.Values{
+			"app_id":    {beego.AppConfig.String("AEASY::appId")},
+			"tx":        {tx},
+			"signature": {signature},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -393,12 +418,12 @@ func (c *ApiNamesMyOverController) Post() {
 
 func (c *ApiNamesUpdateController) Post() {
 	name := c.GetString("name")
-	signingKey := c.GetString("signingKey")
+	address := c.GetString("address")
 	resp, err := http.PostForm(HOST+"/api/names/update",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"signingKey": {signingKey},
-			"name":       {name},
+			"app_id":  {beego.AppConfig.String("AEASY::appId")},
+			"address": {address},
+			"name":    {name},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -600,14 +625,14 @@ func (c *ApiContractDecideController) Post() {
 
 func (c *ApiContractCallController) Post() {
 
-	signingKey := c.GetString("signingKey")
+	address := c.GetString("address")
 	function := c.GetString("function")
 	ctID := c.GetString("ct_id")
 	params := c.GetString("params")
 	amount, _ := c.GetFloat("amount", 0)
 
-	if signingKey == "" {
-		c.ErrorJson(-500, "signingKey error", JsonData{})
+	if address == "" {
+		c.ErrorJson(-500, "address error", JsonData{})
 		return
 	}
 	if ctID == "" {
@@ -624,14 +649,10 @@ func (c *ApiContractCallController) Post() {
 		return
 	}
 
-	account, err := SigningKeyHexStringAccount(signingKey)
-	if err != nil {
-		c.ErrorJson(-500, err.Error()+"123123", JsonData{})
-		return
-	}
+
 	if amount > 0 {
 
-		accountNet, err := ApiGetAccount(account.Address)
+		accountNet, err := ApiGetAccount(address)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
@@ -648,12 +669,22 @@ func (c *ApiContractCallController) Post() {
 		}
 	}
 
-	call, functionEncode, err := CallContractFunction(account, ctID, function, []string{params}, amount)
+	callTx, err := CallContractFunction(address, ctID, function, []string{params}, amount)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
-	c.SuccessJson(map[string]interface{}{"tx": call, "function": functionEncode})
+	txJson, _ := json.Marshal(callTx)
+	uEnc := base64.URLEncoding.EncodeToString([]byte(txJson))
+
+	txRaw, _ := rlp.EncodeToBytes(txJson)
+	msg := append([]byte("ae_mainnet"), txRaw...)
+	//serializeTx, _ := transactions.SerializeTx(spendTx)
+	decodeMsg := hex.EncodeToString(msg)
+
+	c.SuccessJson(map[string]interface{}{
+		"tx":  uEnc,
+		"msg": decodeMsg})
 }
 
 func (c *ApiContractCallStaticController) Post() {
@@ -882,7 +913,7 @@ func (c *ApiContractRankingController) Post() {
 		var items []Ranking
 		for i := 0; i < len(data); i++ {
 
-			if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH"  || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK"  || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
+			if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH" || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK" || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
 				continue
 			}
 
@@ -896,12 +927,11 @@ func (c *ApiContractRankingController) Post() {
 			items = append(items, item)
 		}
 
-
 		sort.Sort(RankingSlice(items))
 
-		if len(items)>=100{
+		if len(items) >= 100 {
 			c.SuccessJson(map[string]interface{}{"out_count": utils.FormatTokens(output, 5), "ranking": items[:100]})
-		}else{
+		} else {
 			c.SuccessJson(map[string]interface{}{"out_count": utils.FormatTokens(output, 5), "ranking": items})
 		}
 
@@ -920,20 +950,17 @@ type Ranking struct {
 	Proportion string `json:"proportion"`
 }
 
+
 func (c *ApiContractLockController) Post() {
 
-	signingKey := c.GetString("signingKey")
+	address := c.GetString("address")
 	params := c.GetString("params")
 	amount, _ := c.GetFloat("amount", 0)
 
-	account, err := SigningKeyHexStringAccount(signingKey)
 	if amount > 0 {
 
-		if err != nil {
-			c.ErrorJson(-500, err.Error(), JsonData{})
-			return
-		}
-		accountNet, err := ApiGetAccount(account.Address)
+
+		accountNet, err := ApiGetAccount(address)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
@@ -951,29 +978,33 @@ func (c *ApiContractLockController) Post() {
 
 	}
 
-	call, functionEncode, err := CallContractFunction(account, ContractBoxAddress, "lock", []string{params}, amount)
+	callTx, err := CallContractFunction(address, ContractBoxAddress, "lock", []string{params}, amount)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
+	txJson, _ := json.Marshal(callTx)
+	uEnc := base64.URLEncoding.EncodeToString([]byte(txJson))
 
-	c.SuccessJson(map[string]interface{}{"tx": call, "function": functionEncode})
+	txRaw, _ := rlp.EncodeToBytes(txJson)
+	msg := append([]byte("ae_mainnet"), txRaw...)
+	//serializeTx, _ := transactions.SerializeTx(spendTx)
+	decodeMsg := hex.EncodeToString(msg)
+
+	c.SuccessJson(map[string]interface{}{
+		"tx":  uEnc,
+		"msg": decodeMsg})
 }
 
 func (c *ApiContractTransferController) Post() {
 
-	signingKey := c.GetString("signingKey")
-	address := c.GetString("address")
+	senderID := c.GetString("senderID")
+	recipientID := c.GetString("recipientID")
 	amount, _ := c.GetFloat("amount", 0)
 
-	account, err := SigningKeyHexStringAccount(signingKey)
-	if err != nil {
-		c.ErrorJson(-500, err.Error(), JsonData{})
-		return
-	}
 	if amount > 0 {
 
-		accountNet, err := ApiGetAccount(account.Address)
+		accountNet, err := ApiGetAccount(senderID)
 		if err != nil {
 			c.ErrorJson(-500, err.Error(), JsonData{})
 			return
@@ -991,11 +1022,20 @@ func (c *ApiContractTransferController) Post() {
 
 	}
 
-	call, functionEncode, err := CallContractFunction(account, ContractABCAddress, "transfer", []string{address, utils.GetRealAebalanceBigInt(amount).String()}, 0)
+	callTx, err := CallContractFunction(senderID, ContractABCAddress, "transfer", []string{recipientID, utils.GetRealAebalanceBigInt(amount).String()}, 0)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
+	txJson, _ := json.Marshal(callTx)
+	uEnc := base64.URLEncoding.EncodeToString([]byte(txJson))
 
-	c.SuccessJson(map[string]interface{}{"tx": call, "function": functionEncode})
+	txRaw, _ := rlp.EncodeToBytes(txJson)
+	msg := append([]byte("ae_mainnet"), txRaw...)
+	//serializeTx, _ := transactions.SerializeTx(spendTx)
+	decodeMsg := hex.EncodeToString(msg)
+
+	c.SuccessJson(map[string]interface{}{
+		"tx":  uEnc,
+		"msg": decodeMsg})
 }

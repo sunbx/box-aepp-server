@@ -207,14 +207,14 @@ func Is1AE(address string) bool {
 	return true
 }
 
-func CallContractFunction(account *account.Account, ctID string, function string, args []string, amount float64) (s interface{}, functionEncode string, e error) {
-	n := naet.NewNode(NodeURL, false)
+func CallContractFunction(address string, ctID string, function string, args []string, amount float64) (tx *transactions.ContractCallTx,  e error) {
 	c := naet.NewCompiler(CompilerURL, false)
-	ctx := aeternity.NewContext(account, n)
-	ctx.SetCompiler(c)
-
+	node := naet.NewNode(NodeURL, false)
+	ttler := transactions.CreateTTLer(node)
+	noncer := transactions.CreateNoncer(node)
+	ttlNoncer := transactions.CreateTTLNoncer(ttler, noncer)
 	var callData = function
-	if v, ok := cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
+	if v, ok := cacheCallMap["CALL#"+function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
 		callData = v
 	} else {
 		var source []byte
@@ -227,21 +227,16 @@ func CallContractFunction(account *account.Account, ctID string, function string
 		}else{
 			source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 		}
-		callData, _ = ctx.Compiler().EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
-		cacheCallMap["CALL#"+function+"#"+account.Address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
+		callData, _ = c.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		cacheCallMap["CALL#"+function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
 	}
 
-	callTx, err := transactions.NewContractCallTx(ctx.SenderAccount(), ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, ctx.TTLNoncer())
+	callTx, err := transactions.NewContractCallTx(address, ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, ttlNoncer)
 	if err != nil {
-		return nil, function, err
-	}
-	callReceipt, err := ctx.SignBroadcast(callTx, 1)
-
-	if err != nil {
-		return nil, function, err
+		return nil, err
 	}
 
-	return callReceipt.Hash, function, err
+	return callTx, err
 }
 
 var cacheCallMap = make(map[string]string)
