@@ -47,6 +47,9 @@ type WalletTransferController struct {
 type TxBroadcastController struct {
 	BaseController
 }
+type ThHashController struct {
+	BaseController
+}
 
 type ApiNamesAuctionsController struct {
 	BaseController
@@ -74,6 +77,9 @@ type ApiNamesInfoController struct {
 	BaseController
 }
 type ApiNamesAddController struct {
+	BaseController
+}
+type PreclaimController struct {
 	BaseController
 }
 type ApiTransferAddController struct {
@@ -265,11 +271,34 @@ func (c *WalletTransferController) Post() {
 func (c *TxBroadcastController) Post() {
 	signature := c.GetString("signature")
 	tx := c.GetString("tx")
+	t := c.GetString("type")
 	resp, err := http.PostForm(HOST+"/api/tx/broadcast",
 		url.Values{
 			"app_id":    {beego.AppConfig.String("AEASY::appId")},
 			"tx":        {tx},
+			"type":      {t},
 			"signature": {signature},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+func (c *ThHashController) Post() {
+	th := c.GetString("th")
+	resp, err := http.PostForm(HOST+"/api/ae/th_hash",
+		url.Values{
+			"app_id": {beego.AppConfig.String("AEASY::appId")},
+			"th":     {th},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -462,12 +491,37 @@ func (c *ApiNamesInfoController) Post() {
 
 func (c *ApiNamesAddController) Post() {
 	name := c.GetString("name")
-	signingKey := c.GetString("signingKey")
-	resp, err := http.PostForm(HOST+"/api/names/add",
+	address := c.GetString("address")
+	nameSalt := c.GetString("nameSalt")
+	println("nameSalt->",nameSalt)
+	resp, err := http.PostForm(HOST+"/api/names/claim",
 		url.Values{
-			"app_id":     {beego.AppConfig.String("AEASY::appId")},
-			"name":       {name},
-			"signingKey": {signingKey},
+			"app_id":   {beego.AppConfig.String("AEASY::appId")},
+			"name":     {name},
+			"address":  {address},
+			"nameSalt": {nameSalt},
+		})
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, e := ioutil.ReadAll(resp.Body)
+	if e != nil {
+		c.ErrorJson(-500, e.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+func (c *PreclaimController) Post() {
+	name := c.GetString("name")
+	address := c.GetString("address")
+	resp, err := http.PostForm(HOST+"/api/names/preclaim",
+		url.Values{
+			"app_id":  {beego.AppConfig.String("AEASY::appId")},
+			"name":    {name},
+			"address": {address},
 		})
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
@@ -649,7 +703,6 @@ func (c *ApiContractCallController) Post() {
 		return
 	}
 
-
 	if amount > 0 {
 
 		accountNet, err := ApiGetAccount(address)
@@ -674,13 +727,15 @@ func (c *ApiContractCallController) Post() {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
-	txJson, _ := json.Marshal(callTx)
-	uEnc := base64.URLEncoding.EncodeToString([]byte(txJson))
 
-	txRaw, _ := rlp.EncodeToBytes(txJson)
+
+	txRaw, _ := rlp.EncodeToBytes(callTx)
 	msg := append([]byte("ae_mainnet"), txRaw...)
 	//serializeTx, _ := transactions.SerializeTx(spendTx)
 	decodeMsg := hex.EncodeToString(msg)
+
+	txJson, _ := json.Marshal(callTx)
+	uEnc := base64.URLEncoding.EncodeToString([]byte(txJson))
 
 	c.SuccessJson(map[string]interface{}{
 		"tx":  uEnc,
@@ -950,7 +1005,6 @@ type Ranking struct {
 	Proportion string `json:"proportion"`
 }
 
-
 func (c *ApiContractLockController) Post() {
 
 	address := c.GetString("address")
@@ -958,7 +1012,6 @@ func (c *ApiContractLockController) Post() {
 	amount, _ := c.GetFloat("amount", 0)
 
 	if amount > 0 {
-
 
 		accountNet, err := ApiGetAccount(address)
 		if err != nil {
@@ -1030,7 +1083,7 @@ func (c *ApiContractTransferController) Post() {
 	txJson, _ := json.Marshal(callTx)
 	uEnc := base64.URLEncoding.EncodeToString([]byte(txJson))
 
-	txRaw, _ := rlp.EncodeToBytes(txJson)
+	txRaw, _ := rlp.EncodeToBytes(callTx)
 	msg := append([]byte("ae_mainnet"), txRaw...)
 	//serializeTx, _ := transactions.SerializeTx(spendTx)
 	decodeMsg := hex.EncodeToString(msg)

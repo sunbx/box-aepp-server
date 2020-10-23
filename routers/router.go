@@ -22,7 +22,8 @@ func init() {
 	beego.Router("/api/wallet/transfer", &controllers.WalletTransferController{})
 
 	//广播
-	beego.Router("/api/tx/broadcast", &controllers.TxBroadcastController{})
+	beego.Router("/api/tx/broadcast", &controllers.TxBroadcastController{}) //广播
+	beego.Router("/api/ae/th_hash", &controllers.ThHashController{})
 
 	//aeasy register
 	beego.Router("/api/wallet/transfer/record", &controllers.ApiWalletTransferRecordController{})
@@ -43,7 +44,10 @@ func init() {
 	beego.Router("/api/names/my/over", &controllers.ApiNamesMyOverController{})
 
 	//ApiNamesPriceController
-	beego.Router("/api/names/add", &controllers.ApiNamesAddController{})
+	beego.Router("/api/names/claim", &controllers.ApiNamesAddController{})
+
+	//域名声明
+	beego.Router("/api/names/preclaim", &controllers.PreclaimController{})
 
 	//ApiNamesUpdateController
 	beego.Router("/api/names/update", &controllers.ApiNamesUpdateController{})
@@ -66,8 +70,6 @@ func init() {
 	//ApiNamesPriceController
 	beego.Router("/api/contract/decode", &controllers.ApiContractDecideController{})
 
-
-
 	beego.Router("/api/contract/balance", &controllers.ApiContractBalanceController{})
 	beego.Router("/api/contract/info", &controllers.ApiContractInfoController{})
 
@@ -80,8 +82,5 @@ func init() {
 
 	beego.Router("/api/contract/transfer", &controllers.ApiContractTransferController{})
 	beego.Router("/test", &controllers.TESTController{})
-
-
-
 
 }
