@@ -493,7 +493,7 @@ func (c *ApiNamesAddController) Post() {
 	name := c.GetString("name")
 	address := c.GetString("address")
 	nameSalt := c.GetString("nameSalt")
-	println("nameSalt->",nameSalt)
+	println("nameSalt->", nameSalt)
 	resp, err := http.PostForm(HOST+"/api/names/claim",
 		url.Values{
 			"app_id":   {beego.AppConfig.String("AEASY::appId")},
@@ -728,7 +728,6 @@ func (c *ApiContractCallController) Post() {
 		return
 	}
 
-
 	txRaw, _ := rlp.EncodeToBytes(callTx)
 	msg := append([]byte("ae_mainnet"), txRaw...)
 	//serializeTx, _ := transactions.SerializeTx(spendTx)
@@ -771,10 +770,10 @@ func (c *ApiContractBalanceController) Post() {
 	address := c.GetString("address")
 
 	if ctId == "" {
-		ctId = ContractBoxAddress
+		ctId = ContractABCAddress
 	}
 
-	result, _, err := CallStaticContractFunction(address, ContractBoxAddress, "getTokenCallerBalance", []string{address})
+	result, _, err := CallStaticContractFunction(address, ctId, "balance", []string{address})
 
 	if err != nil {
 		if "Error: Account not found" == err.Error() {
@@ -809,65 +808,106 @@ func (c *ApiContractInfoController) Post() {
 	if ctId == "" {
 		ctId = ContractBoxAddress
 	}
-	var contractBalance64Old = 0.0
-	var myResultOldCount = 0.0
 
-	contractResultOld, _, err := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxOldAddress, "getContractBalance", []string{})
-	contractBalance64Old, _ = contractResultOld.(json.Number).Float64()
+	var contractBalanceV1Old = 0.0
+	var contractBalanceV1 = 0.0
+	var contractBalanceV2 = 0.0
+
+	var myContractBalanceV1Old = 0.0
+	var myContractBalanceV1 = 0.0
+	var myContractBalanceV2 = 0.0
+
+	blockHeight := ApiBlocksTop()
+	getAccountInfo, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxV2Address, "getAccountInfo", []string{address})
+	info := map[string]interface{}{}
+	info["account"] = address
+	info["count"] = "0.00"
+	info["height"] = blockHeight
+	info["earnings"] = "0.0000000"
+	switch getAccountInfo.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
+	case map[string]interface{}:
+		data := getAccountInfo.(map[string]interface{})
+		some, _ := data["Some"].([]interface{})
+		some0, _ := some[0].(map[string]interface{})
+		count, _ := some0["count"].(json.Number).Float64()
+		height, _ := some0["height"].(json.Number).Int64()
+		info["account"] = some0["account"]
+		info["count"] = utils.FormatTokens(count, 2)
+		info["height"] = some0["height"]
+		myContractBalanceV2 = count
+		formatFloat := strconv.FormatFloat(count/1000000000000000000*float64(float64(int(blockHeight)-int(height))*0.0000003), 'f', 7, 64)
+		info["earnings"] = formatFloat
+		if count == 0 {
+			info["count"] = "0.00"
+			info["height"] = blockHeight
+			info["earnings"] = "0.0000000"
+		}
+	}
+
+	myBalanceV1, _, _ := CallStaticContractFunction(address, ContractBoxAddress, "getAccountsHeight", []string{address})
+	switch myBalanceV1.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
+	case map[string]interface{}:
+		data := myBalanceV1.(map[string]interface{})
+		balance64, _ := data["count"].(json.Number).Float64()
+		myContractBalanceV1 = balance64
+	}
 
 	if strings.Contains("ak_2g2yq6RniwW1cjKRu4HdVVQXa5GQZkBaXiaVogQXnRxUKpmhS\",270824000000000000000],	[\"ak_3i4bwAbXBRHBqTDYFVLUSa8byQUeBAFzEgjfYk6rSyjWEXL3i\",259200000000000000000],	[\"ak_9XhfcrCtEyPFWPM3GVPC2BCFqetcYV3fDv3EjPpVdR9juAofA\",129600000000000000000],	[\"ak_ELsVMRbBe4LWEuqNU1pn2UCNpnNfdpHjRJjDFjT4R4yzRTeXt\",1390979520000000015854],	[\"ak_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv\",499977516107119999999972654],	[\"ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH\",0],	[\"ak_QyFYYpgJ1vUGk1Lnk8d79WJEVcAtcfuNHqquuP2ADfxsL6yKx\",321088000000000000000],	[\"ak_V9SApNmgDGNLQcZWTzYb3PKtmFuwRn8ENdAg7WjZUdiwgkyUP\",84384000000000000000],	[\"ak_XtJGJrJuvxduT1HFMye4PuEkfUnU9L5rUE5CQ2F9MkqYQVr3f\",648000000000000000000],	[\"ak_fGPGYbqkEyWMV8R4tvQZznpzt28jb54EinF84TRSVCi997kiJ\",2448000000000000000],	[\"ak_o27hkgCTN2WZBkHd4vPcbfJPM2tzddv8xy1yaQnoyFEvqpZQK\",3596400000000000000],	[\"ak_tM5FE5HZSxUvDNAcBKMpSM9iXdsLviJ6tXffiH3BNpFrvgRoR\",383304960000000000000],	[\"ak_22HBW4s8HoCSa6ZKkd7CtFhs7vdBQ5Sgahi7FbRhp7xQ429WG2\",301216320000000007927],	[\"ak_25rsqRgVpcaD3fSZxCQVcyi4VNK3CTqf8CbzsnGtHCeu3ivrM1\",842670000000000000000],	[\"ak_281fyU5kV5yG6ZEgV9nnprLxRznSUKzxmgn2ZnxBhfD8ryWcuk\",128952000000000000000],	[\"ak_28LuZ8CG4LF6LvL47seA2GuCtaNEdXKiVMZP46ykYW8bEcuoVg\",13219200000000000000000],	[\"ak_294D9LQa95ckuJi5z7Who4TzKZWwEGimsyv1ZKM7osPE9c8Bx7\",521424000000000000000],	[\"ak_2JJNMYcnqPaABiSY5omockmv4cCoZefv4XzStAxKe9gM2xYz2r\",582912000000000000000],	[\"ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6\",977560560000000001188],	[\"ak_2UCUD59aWZyyhZzZbUdxoyP94r3mz9GvkH49HzJjsfC8MYqVPn\",81000000000000000000],	[\"ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK\",1955121120000000002377],	[\"ak_2gEL91xaQwvdN7psiCcGpSwcEMctTX1CVMT2g8f6NEp48tkvAr\",133164000000000000000],	[\"ak_2j2iyGwDnmiDZC9Dc2T8W371MYD9CQxDGSZ2Ne7WT2thY6q888\",213984000000000000000],	[\"ak_2mhBmzVv82SvtKATNBxfD1JhbLBrRNZZmah3QMqRkcK1SP3Bka\",33264000000000000000]", address) {
-		myResultOld, _, _ := CallStaticContractFunction(address, ContractBoxOldAddress, "getAccountsHeight", []string{address})
-		data := myResultOld.(map[string]interface{})
-		myResultOldCount, _ = data["count"].(json.Number).Float64()
+		myBalanceV1Old, _, _ := CallStaticContractFunction(address, ContractBoxOldAddress, "getAccountsHeight", []string{address})
+		data := myBalanceV1Old.(map[string]interface{})
+		myContractBalanceV1Old, _ = data["count"].(json.Number).Float64()
 	}
 
-	contractResult, _, err := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxAddress, "getContractBalance", []string{})
+	myContractBalances := utils.FormatTokens(myContractBalanceV1+myContractBalanceV1Old+myContractBalanceV2, 5)
 
-	if err != nil {
-		if "Error: Account not found" == err.Error() {
-			c.SuccessJson(map[string]interface{}{"contract_balance": "0.00000", "my_balance": "0.00000"})
-			return
-		}
-		c.ErrorJson(-500, err.Error(), JsonData{})
-		return
-	}
+	contractBalanceOld, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxOldAddress, "getContractBalance", []string{})
+	contractBalanceV1Old, _ = contractBalanceOld.(json.Number).Float64()
 
-	myResult, _, err2 := CallStaticContractFunction(address, ContractBoxAddress, "getAccountsHeight", []string{address})
+	contractBalance, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxAddress, "getContractBalance", []string{})
+	contractBalanceV1, _ = contractBalance.(json.Number).Float64()
 
-	contractBalance64, _ := contractResult.(json.Number).Float64()
-	contractBalance := utils.FormatTokens(contractBalance64+contractBalance64Old, 5)
-	if contractBalance == "0" {
-		contractBalance = "0.00000"
-	}
-	if err2 != nil {
-		if "Error: Account not found" == err2.Error() {
-			c.SuccessJson(map[string]interface{}{"contract_balance": contractBalance, "my_balance": "0.00000"})
-			return
-		}
-		c.ErrorJson(-500, err2.Error(), JsonData{})
-		return
-	}
+	contractBalanceNew, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxV2Address, "getContractBalance", []string{})
+	contractBalanceV2, _ = contractBalanceNew.(json.Number).Float64()
 
-	var myBalance = "0.00000"
-	switch v := myResult.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
-	case int:
-		fmt.Printf("%v is an int", v)
-	case string:
-		fmt.Printf("%v is string", v)
-		//c.SuccessJson(map[string]interface{}{"balance": "0.00000"})
+	ontractBalances := utils.FormatTokens(contractBalanceV1+contractBalanceV1Old+contractBalanceV2, 5)
 
-	case map[string]interface{}:
-		data := myResult.(map[string]interface{})
-		balance64, _ := data["count"].(json.Number).Float64()
-		balance := utils.FormatTokens(balance64+myResultOldCount, 5)
-		myBalance = balance
-	}
+	//myResult, _, err2 := CallStaticContractFunction(address, ContractBoxAddress, "getAccountsHeight", []string{address})
+	//
+	//contractBalance64, _ := contractResult.(json.Number).Float64()
+	//contractBalance := utils.FormatTokens(contractBalance64+contractBalance64Old+myContractBalanceV2, 5)
+	//if contractBalance == "0" {
+	//	contractBalance = "0.00000"
+	//}
+	//if err2 != nil {
+	//	if "Error: Account not found" == err2.Error() {
+	//		c.SuccessJson(map[string]interface{}{"contract_balance": contractBalance, "my_balance": "0.00000"})
+	//		return
+	//	}
+	//	c.ErrorJson(-500, err2.Error(), JsonData{})
+	//	return
+	//}
+	//
+	//var myBalance = "0.00000"
+	//switch v := myResult.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
+	//case int:
+	//	fmt.Printf("%v is an int", v)
+	//case string:
+	//	fmt.Printf("%v is string", v)
+	//	//c.SuccessJson(map[string]interface{}{"balance": "0.00000"})
+	//
+	//case map[string]interface{}:
+	//	data := myResult.(map[string]interface{})
+	//	balance64, _ := data["count"].(json.Number).Float64()
+	//
+	//	myContractBalanceV1 = balance64
+	//}
+	//balance := utils.FormatTokens(myContractBalanceV1+myContractBalanceV2+contractBalance64Old, 5)
+	//myBalance = balance
+	//if myBalance == "0" {
+	//	myBalance = "0.00000"
+	//}
 
-	if myBalance == "0" {
-		myBalance = "0.00000"
-	}
-
-	c.SuccessJson(map[string]interface{}{"contract_balance": contractBalance, "my_balance": myBalance})
+	c.SuccessJson(map[string]interface{}{"contract_balance": ontractBalances, "my_balance": myContractBalances, "account_info": info})
 }
 func (c *ApiContractRecordController) Post() {
 
@@ -939,14 +979,17 @@ func (c *ApiContractRankingController) Post() {
 		ctId = ContractABCAddress
 	}
 
-	result, _, err := CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", ContractBoxAddress, "getTokenCallerBalance", []string{"ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T"})
+	result, _, err := CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", ctId, "balance", []string{"ak_SNM68L9pEym92bBf3ZJjzzuB9eyCtVhouHB3Qq5SpyU9Ccn2F"})
 	var output = 0.0
+
 	switch result.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
 	case map[string]interface{}:
 		data := result.(map[string]interface{})
+		println(data)
 		balances := data["Some"].([]interface{})
 		output, _ = balances[0].(json.Number).Float64()
-		output = 500000000*1000000000000000000 - output
+		println(output)
+		output = 50000000*1000000000000000000 - output
 	}
 
 	myResult, _, err := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ctId, "balances", []string{})
@@ -968,7 +1011,7 @@ func (c *ApiContractRankingController) Post() {
 		var items []Ranking
 		for i := 0; i < len(data); i++ {
 
-			if data[i].([]interface{})[0].(string) == "ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH" || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK" || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
+			if data[i].([]interface{})[0].(string) == "ak_SNM68L9pEym92bBf3ZJjzzuB9eyCtVhouHB3Qq5SpyU9Ccn2F" || data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH" || data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK" || data[i].([]interface{})[0].(string) == "ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6" {
 				continue
 			}
 

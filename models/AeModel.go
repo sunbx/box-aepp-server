@@ -26,10 +26,13 @@ var NodeURLD = "http://localhost:3113"
 var CompilerURL = "http://localhost:3080"
 
 //var ContractABCAddress = "ct_2XG6wyPjf46KFY8NCMQDKHbPDkp3HmdovFqgtg4ZQoSLwc6C2b"
-var ContractABCAddress = "ct_ypGRSB6gEy8koLg6a4WRdShTfRsh9HfkMkxsE2SMCBk3JdkNP"
+//var ContractABCAddress = "ct_ypGRSB6gEy8koLg6a4WRdShTfRsh9HfkMkxsE2SMCBk3JdkNP"
+var ContractABCAddress = "ct_2B4V2HtzoxYsEGACtGx68XtrUXq7f6iKXZkjtvnqZRLXzSLeTU"
 
 var ContractBoxOldAddress = "ct_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv"
 var ContractBoxAddress = "ct_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T"
+//var ContractBoxV2Address = "ct_p5nquQ1XSshb6nvEXiSH84d69ub5TZbVtAgvL9KAr1fXkEKZD"
+var ContractBoxV2Address = "ct_SNM68L9pEym92bBf3ZJjzzuB9eyCtVhouHB3Qq5SpyU9Ccn2F"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -207,7 +210,7 @@ func Is1AE(address string) bool {
 	return true
 }
 
-func CallContractFunction(address string, ctID string, function string, args []string, amount float64) (tx *transactions.ContractCallTx,  e error) {
+func CallContractFunction(address string, ctID string, function string, args []string, amount float64) (tx *transactions.ContractCallTx, e error) {
 	c := naet.NewCompiler(CompilerURL, false)
 	node := naet.NewNode(NodeURL, false)
 	ttler := transactions.CreateTTLer(node)
@@ -224,12 +227,14 @@ func CallContractFunction(address string, ctID string, function string, args []s
 			source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 		} else if ctID == ContractABCAddress {
 			source, _ = ioutil.ReadFile("contract/AbcContract.aes")
-		}else{
+		} else {
 			source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 		}
 		callData, _ = c.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
 		cacheCallMap["CALL#"+function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
 	}
+	data, _ := c.DecodeData(callData, "")
+	println(data)
 
 	callTx, err := transactions.NewContractCallTx(address, ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, ttlNoncer)
 	if err != nil {
@@ -252,7 +257,9 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 	} else if ctID == ContractABCAddress {
 		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
-	}else{
+	} else if ctID == ContractBoxV2Address {
+		source, _ = ioutil.ReadFile("contract/BoxContractV2.aes")
+	} else {
 		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
 	}
 
