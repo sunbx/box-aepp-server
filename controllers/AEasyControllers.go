@@ -167,8 +167,13 @@ func (c *NamesBaseController) Post() {
 }
 
 func (c *HomeController) Get() {
+	if utils.IsMobile(c.Ctx.Input.Header("user-agent")) {
+		c.TplName = "index_mobile.html"
+	} else {
 
-	c.TplName = "index.html"
+		c.TplName = "index.html"
+	}
+
 }
 
 func (c *ApiBaseDataController) Post() {

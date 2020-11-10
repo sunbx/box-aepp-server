@@ -6,6 +6,19 @@
 </head>
 
 <style>
+    /* User Defined Font */
+    @font-face {
+        font-family: 'myfont';
+        src: url("../static/fonts/Ubuntu-Regular.ttf");
+    }
+    @font-face {
+        font-family: 'myfont-bold';
+        src: url("../static/fonts/Ubuntu-Bold.ttf");
+        font-weight: bold;
+    }
+
+
+
     body, ul, li, h1, h2, h3, h4, h5, h6, p, form, dl, dt, dd {
         margin: 0px;
         padding: 0px;
@@ -30,137 +43,77 @@
         padding: 0;
     }
 
-    .w1280 {
-        width: 1200px;
-        margin: 0 auto;
-    }
-
-    .logo {
-        width: 162px;
-        height: 44px;
-        margin-top: 30px;
-        margin-left: 30px;
-    }
-
-    /*.bg1 {*/
-    /*    transform: rotate(-56deg);*/
-    /*    background: rgb(231, 22, 101);*/
-    /*    border-radius: 325px;*/
-    /*    border-radius: 325px;*/
-    /*    width: 800px;*/
-    /*    height: 800px;*/
-    /*    right: -20%;*/
-    /*    top: -15%;*/
-    /*    position: absolute;*/
-    /*}*/
-    /*.bg2 {*/
-    /*    transform: rotate(-60deg);*/
-    /*    background: #000000;*/
-    /*    border-radius: 125px;*/
-    /*    border-radius: 125px;*/
-    /*    width: 600px;*/
-    /*    height: 500px;*/
-    /*    right: -4%;*/
-    /*    top: 10%;*/
-    /*    position: absolute;*/
-    /*}*/
-
-    .bgs-base{
-        position: relative;
-        width: 1280px;
-        margin: 0 auto;
-    }
-    .bgs {
-        position: absolute;
-        height: 100%;
-        z-index: -1;
-       margin-top: 10%;
-    }
-
-    .bg1 {
-        width: 593px;
-        height: 798px;
-        background: url("../static/img/index_bg1.png");
-        right: -10%;
-        top: 10%;
-        position: absolute;
-        background-size: 100% 100%;
-    }
-
-    .bg2 {
-        width: 360px;
-        height: 717px;
-        background: url("../static/img/index_bg2.png");
-        right: 5%;
-        top: 20%;
-        position: absolute;
-        background-size: 100% 100%;
-    }
-
-    .bg3 {
-        width: 160px;
-        height: 160px;
-        border-radius: 160px;
-        background: rgb(231, 22, 101);
-        position: absolute;
-        margin-top: 5%;
-        margin-left: 5%;
-        background-size: 100% 100%;
-    }
-
-    .bg4 {
-        width: 40px;
-        height: 40px;
-        background: url("../static/img/index_bg4.png");
-        right: 0%;
-        position: absolute;
-        margin-top: 120px;
-        background-size: 100% 100%;
-    }
-
-    .bg5 {
-        width: 140px;
-        height: 80px;
-        background: url("../static/img/index_bg5.png");
-        margin-top: 10%;
-        left: 35%;
-        position: absolute;
-        background-size: 100% 100%;
-    }
-
-
-    .content {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
+    body {
         display: flex;
         align-items: center; /*定义body的元素垂直居中*/
         justify-content: center; /*定义body的里的元素水平居中*/
     }
 
-    .title {
-        font-family: Avenir-Black;
-        font-size: 54px;
-        color: #250913;
-        width: 500px;
-        line-height: 74px;
+    .content {
+        width: 1200px;
+        background-size: 100% 100%;
+        height: 800px;
+        margin: 0 auto;
+        position: relative;
+        padding-left: 100px;
+        /*background-image: url("../static/img/bg_card.png");*/
     }
 
-    .box {
-        height: 600px;
-        padding-left: 150px;
+    .logo {
+        width: 162px;
+        height: 44px;
+        margin-top: 50px;
+    }
+
+    .title {
+
+        font-size: 54px;
+        color: #250913;
+        line-height: 74px;
+        font-family: 'myfont-bold';
+        font-weight: bold;
+    }
+
+    .title-animation {
+        font-family: 'Microsoft YaHei';
+        font-size: 54px;
+        color: #250913;
+        line-height: 74px;
+        font-weight: bold;
+        font-family: 'myfont-bold';
+        border-right: .1em solid;
+        width: 350px;
+        /* fallback */
+        /*width:30ch;*/
+        /* # of chars */
+        /*margin:2em 1em;*/
+        white-space: nowrap;
+        overflow: hidden;
+        animation: typing 2s steps(30, end), /* # of steps = # of chars */ blink-caret .5s step-end infinite alternate;
+    }
+
+    @keyframes typing {
+        from {
+            width: 0;
+        }
+    }
+
+    @keyframes blink-caret {
+        50% {
+            border-color: transparent;
+        }
     }
 
     .con {
         opacity: 0.7;
-        font-family: Avenir-Medium;
         font-size: 20px;
         width: 460px;
         color: #250913;
         letter-spacing: 0;
-        margin-top: 30px;
-        line-height: 30px;
+        margin-top: 20px;
+        font-family: 'myfont';
+
+        line-height: 40px;
     }
 
     .button {
@@ -175,6 +128,7 @@
         text-align: center;
         text-decoration: none;
         float: left;
+        font-family: 'myfont';
         display: block;
         box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.1);
     }
@@ -186,6 +140,7 @@
         border-radius: 23px;
         line-height: 45px;
         color: white;
+        font-family: 'myfont';
         font-size: 16px;
         background-repeat: no-repeat;
         letter-spacing: 1.2px;
@@ -197,36 +152,45 @@
         box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .buttons {
-        margin-top: 50px;
+    .pic {
+        width: 730px;
+        height: 817px;
+        background: url("../static/img/pic.png");
+        right: 0;
+        margin-top: -358px;
+        align-items: center; /*定义body的元素垂直居中*/
+        top: 50%;
+        justify-content: center; /*定义body的里的元素水平居中*/
+        position: absolute;
+        background-size: 100% 100%;
     }
+
+    .bg {
+        width: 100%;
+        height: 100%;
+        background: url("../static/img/bg.png");
+        position: absolute;
+        background-size: 100% 100%;
+    }
+
 </style>
 <body>
 
-<div class="bgs-base">
-    <div class="bgs w1280">
-        <div class="bg1"></div>
-        <div class="bg2"></div>
-        <div class="bg3"></div>
-        <div class="bg4"></div>
-        <div class="bg5"></div>
-
-    </div>
-
-</div>
-
-
-<div class="header w1280">
-    <img src="../static/img/logo.png" alt="" class="logo">
-</div>
-
-<div class="content">
-
-    <div class="box w1280">
-        <p class="title">Box aepp opens up your wireless possibilities</p>
+<div class="bg"></div>
+<div id="content" class="content">
+    <div class="pic"></div>
+    <div class="item">
+        <div>
+            <img src="../static/img/logo.png" alt="" class="logo">
+        </div>
+        <div style="height: 80px;"></div>
+        <p class="title">Infinite possibility </p>
+        <p class="title">box opens aeternal </p>
+        <p class="title-animation">block world </p>
         <p class="con">The functions in the box include basic wallet, Aens system, games, smart contract, instant
             messaging, data link, and so on. It is a decentralized aepp</p>
 
+        <div style="height: 50px;"></div>
         <div class="buttons">
             <a class="button" href="./login.html"
                target="_blank">
@@ -235,16 +199,42 @@
             </a>
             <a class="button2" href="./login.html"
                target="_blank">
-
                 <span>Android</span>
             </a>
         </div>
-
 
     </div>
 
 </div>
 
-
 </body>
+<script type="text/javascript">
+    autodivheight();
+    function autodivheight(){ //函数：获取尺寸
+        //获取浏览器窗口高度
+        var winHeight=0;
+        if (window.innerHeight){
+            winHeight = window.innerHeight;
+        }
+        else if ((document.body) && (document.body.clientHeight)){
+            winHeight = document.body.clientHeight;
+        }
+        //通过深入Document内部对body进行检测，获取浏览器窗口高度
+        if (document.documentElement && document.documentElement.clientHeight){
+            winHeight = document.documentElement.clientHeight;
+        }
+        //DIV高度为浏览器窗口的高度
+        //document.getElementById("test").style.height= winHeight +"px";
+        //DIV高度为浏览器窗口高度的一半
+        console.log(winHeight);
+        if(winHeight>840){
+            document.getElementById("content").style.backgroundImage='url(../static/img/bg_card.png)';
+        }else{
+            document.getElementById("content").style.backgroundImage='';
+        }
+
+    }
+    window.onresize=autodivheight; //浏览器窗口发生变化时同时变化DIV高度
+</script>
+
 </html>
