@@ -25,14 +25,10 @@ var NodeURL = "http://localhost:3013"
 var NodeURLD = "http://localhost:3113"
 var CompilerURL = "http://localhost:3080"
 
-//var ContractABCAddress = "ct_2XG6wyPjf46KFY8NCMQDKHbPDkp3HmdovFqgtg4ZQoSLwc6C2b"
-//var ContractABCAddress = "ct_ypGRSB6gEy8koLg6a4WRdShTfRsh9HfkMkxsE2SMCBk3JdkNP"
-var ContractABCAddress = "ct_2B4V2HtzoxYsEGACtGx68XtrUXq7f6iKXZkjtvnqZRLXzSLeTU"
-
+var ContractABCAddress = "ct_2M4mVQCDVxu6mvUrEue1xMafLsoA1bgsfC3uT95F3r1xysaCvE"
 var ContractBoxOldAddress = "ct_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv"
 var ContractBoxAddress = "ct_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T"
-//var ContractBoxV2Address = "ct_p5nquQ1XSshb6nvEXiSH84d69ub5TZbVtAgvL9KAr1fXkEKZD"
-var ContractBoxV2Address = "ct_SNM68L9pEym92bBf3ZJjzzuB9eyCtVhouHB3Qq5SpyU9Ccn2F"
+var ContractBoxV2Address = "ct_2MgX2e9mdM3epVpmxLQim7SAMF2xTbid4jtyVi4WiLF3Q8ZTRZ"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
