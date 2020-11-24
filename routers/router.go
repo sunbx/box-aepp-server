@@ -69,6 +69,7 @@ func init() {
 
 	//ApiNamesPriceController
 	beego.Router("/api/contract/decode", &controllers.ApiContractDecideController{})
+	beego.Router("/api/contract/swap/record", &controllers.ApiContractSwapRecordController{})
 
 	beego.Router("/api/contract/balance", &controllers.ApiContractBalanceController{})
 	beego.Router("/api/contract/info", &controllers.ApiContractInfoController{})

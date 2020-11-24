@@ -100,6 +100,9 @@ type ApiContractCallStaticController struct {
 type ApiContractDecideController struct {
 	BaseController
 }
+type ApiContractSwapRecordController struct {
+	BaseController
+}
 type ApiContractTransferController struct {
 	BaseController
 }
@@ -915,6 +918,56 @@ func (c *ApiContractInfoController) Post() {
 	c.SuccessJson(map[string]interface{}{"contract_balance": ontractBalances, "my_balance": myContractBalances, "account_info": info})
 }
 func (c *ApiContractRecordController) Post() {
+
+	ctId := c.GetString("ct_id")
+	address := c.GetString("address")
+
+	if ctId == "" {
+		ctId = ContractBoxAddress
+	}
+
+	myResult, _, err := CallStaticContractFunction(address, ctId, "getAccountsHeight", []string{address})
+
+	if err != nil {
+		if "Error: Account not found" == err.Error() {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	blockHeight := ApiBlocksTop()
+	switch myResult.(type) {
+	case map[string]interface{}:
+		data := myResult.(map[string]interface{})
+		heights, _ := data["heights"].([]interface{})
+		var items []interface{}
+		for i := 0; i < len(heights); i++ {
+			var item = map[string]interface{}{}
+			height := heights[i].([]interface{})
+			model := height[1].(map[string]interface{})
+
+			item["account"] = model["account"]
+			item["unlock_height"] = model["unlock_height"]
+			item["continue_height"] = model["continue_height"]
+			item["day"] = model["day"]
+			item["height"] = blockHeight
+			number, _ := model["number"].(json.Number).Float64()
+			tokenNumber, _ := model["token_number"].(json.Number).Float64()
+			item["number"] = utils.FormatTokens(number, 2)
+			item["token_number"] = utils.FormatTokens(tokenNumber, 5)
+
+			items = append(items, item)
+		}
+		if items == nil {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.SuccessJson(items)
+	}
+}
+
+func (c *ApiContractSwapRecordController) Post() {
 
 	ctId := c.GetString("ct_id")
 	address := c.GetString("address")

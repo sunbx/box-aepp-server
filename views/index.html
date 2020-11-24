@@ -193,13 +193,11 @@
 
         <div style="height: 50px;"></div>
         <div class="buttons">
-            <a class="button" href="./login.html"
-               target="_blank">
+            <a class="button" href="javascript:download_iOS();">
                 <img>
                 <span>iOS</span>
             </a>
-            <a class="button2" href="./login.html"
-               target="_blank">
+            <a class="button2" href="javascript:download_Android();">
                 <span>Android</span>
             </a>
         </div>
@@ -236,6 +234,15 @@
 
     }
     window.onresize=autodivheight; //浏览器窗口发生变化时同时变化DIV高度
+
+
+
+    function download_iOS() {
+        window.location.href = "https://testflight.apple.com/join/iVgCHJCc";
+    }
+    function download_Android() {
+        window.location.href = "https://boxaepp.oss-cn-hangzhou.aliyuncs.com/com.aepp.box_release_v1.1.0_20201115145541.apk";
+    }
 </script>
 
 </html>
