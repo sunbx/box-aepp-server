@@ -19,16 +19,21 @@ import (
 	"strconv"
 )
 
-//var nodeURL = "https://mainnet.aeternal.io"
-//var NodeURL = "http://node.aechina.io:3013"
-var NodeURL = "http://localhost:3013"
-var NodeURLD = "http://localhost:3113"
-var CompilerURL = "http://localhost:3080"
+
+var NodeURL = "https://node.aeasy.io"
+//var NodeURL = "http://localhost:3013"
+var NodeURLD = "https://debug.aeasy.io"
+//var NodeURLD = "http://localhost:3113"
+//var CompilerURL = "http://localhost:3080"
+var CompilerURL = "https://compiler.aeasy.io"
 
 var ContractABCAddress = "ct_2M4mVQCDVxu6mvUrEue1xMafLsoA1bgsfC3uT95F3r1xysaCvE"
 var ContractBoxOldAddress = "ct_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv"
 var ContractBoxAddress = "ct_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T"
 var ContractBoxV2Address = "ct_2MgX2e9mdM3epVpmxLQim7SAMF2xTbid4jtyVi4WiLF3Q8ZTRZ"
+var ContractSwapAddress = "ct_2QjYFRYbfjUoxe6TSrBYr3SDVpy8NfWk4W5EQYNfHMerZv4qRA"
+
+
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -255,26 +260,45 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
 	} else if ctID == ContractBoxV2Address {
 		source, _ = ioutil.ReadFile("contract/BoxContractV2.aes")
+	} else if ctID == ContractSwapAddress {
+		source, _ = ioutil.ReadFile("contract/SwapContract.aes")
 	} else {
-		source, _ = ioutil.ReadFile("contract/BoxContractOld.aes")
+		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
 	}
 
 	var callData = ""
-	if v, ok := cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
-		callData = v
-	} else {
-		callData, _ = compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+	if v, ok := cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))]; ok {
+		if ok && len(v)>5{
+			callData = v
 
-		cacheCallMap[function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
+		}else{
+			data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+			if err != nil {
+				return nil, function, err
+			}
+			callData = data
+			cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))] = callData
+		}
+
+	} else {
+		data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		if err != nil {
+			return nil, function, err
+		}
+		callData = data
+
+		cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))] = callData
 	}
 
 	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
 	if err != nil {
 		return nil, function, err
 	}
+
 	w := &bytes.Buffer{}
 	err = callTx.EncodeRLP(w)
 	if err != nil {
+		println(callTx.CallData)
 		return nil, function, err
 	}
 
@@ -289,13 +313,14 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 		return nil, function, err
 	}
 
-	if v, ok := cacheResultlMap[tryRun.Results[0].CallObj.ReturnValue]; ok {
+	if v, ok := cacheResultlMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
 		return v, function, err
 	} else {
 		decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
-		cacheResultlMap[tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+		cacheResultlMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
 		return decodeResult, function, err
 	}
+
 
 }
 

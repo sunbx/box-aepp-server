@@ -103,6 +103,16 @@ type ApiContractDecideController struct {
 type ApiContractSwapRecordController struct {
 	BaseController
 }
+type ApiContractSwapRecordMyController struct {
+	BaseController
+}
+
+type ApiContractSwapRecordMyBuyController struct {
+	BaseController
+}
+type ApiContractSwapRecordMySellController struct {
+	BaseController
+}
 type ApiContractTransferController struct {
 	BaseController
 }
@@ -125,8 +135,8 @@ type ApiContractLockController struct {
 	BaseController
 }
 
-//var HOST =   "https://aeasy.io"
-var HOST = "http://localhost:8088"
+var HOST =   "https://aeasy.io"
+//var HOST = "http://localhost:8088"
 
 func (c *BlockTopController) Post() {
 	resp, err := http.PostForm(HOST+"/api/ae/block_top",
@@ -572,7 +582,6 @@ func (c *ApiTransferAddController) Post() {
 
 func (c *ApiUserInfoController) Post() {
 	address := c.GetString("address")
-	print("address->", address)
 	resp, err := http.PostForm(HOST+"/api/user/info",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
@@ -852,32 +861,167 @@ func (c *ApiContractInfoController) Post() {
 		}
 	}
 
-	myBalanceV1, _, _ := CallStaticContractFunction(address, ContractBoxAddress, "getAccountsHeight", []string{address})
-	switch myBalanceV1.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
-	case map[string]interface{}:
-		data := myBalanceV1.(map[string]interface{})
-		balance64, _ := data["count"].(json.Number).Float64()
-		myContractBalanceV1 = balance64
+	if strings.Contains(" [ [\n" +
+		" \"ak_tM5FE5HZSxUvDNAcBKMpSM9iXdsLviJ6tXffiH3BNpFrvgRoR\",\n" +
+		" 422858880000000000000\n" +
+		"],[\n" +
+		" \"ak_idkx6m3bgRr7WiKXuB8EBYBoRqVsaSc6qo4dsd23HKgj3qiCF\",\n" +
+		" 11000000000000000000\n" +
+		"],[\n" +
+		" \"ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK\",\n" +
+		" 9868510623246800078368\n" +
+		"],[\n" +
+		" \"ak_294D9LQa95ckuJi5z7Who4TzKZWwEGimsyv1ZKM7osPE9c8Bx7\",\n" +
+		" 651024000000000000000\n" +
+		"],[\n" +
+		" \"ak_fGPGYbqkEyWMV8R4tvQZznpzt28jb54EinF84TRSVCi997kiJ\",\n" +
+		" 3963024000000000000000\n" +
+		"],[\n" +
+		" \"ak_fCCw1JEkvXdztZxk8FRGNAkvmArhVeow89e64yX4AxbCPrVh5\",\n" +
+		" 100000000000000000000\n" +
+		"],[\n" +
+		" \"ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH\",\n" +
+		" 0\n" +
+		"],[\n" +
+		" \"ak_dSxpSHEc3VqNSsH3F5u4M7rCf4ehs2KTPWBEkRLv4Cp2N1vD\",\n" +
+		" 16200000000000000000\n" +
+		"],[\n" +
+		" \"ak_2gEL91xaQwvdN7psiCcGpSwcEMctTX1CVMT2g8f6NEp48tkvAr\",\n" +
+		" 312948000000000000000\n" +
+		"],[\n" +
+		" \"ak_2JJNMYcnqPaABiSY5omockmv4cCoZefv4XzStAxKe9gM2xYz2r\",\n" +
+		" 1459008000000000000000\n" +
+		"],[\n" +
+		" \"ak_XtJGJrJuvxduT1HFMye4PuEkfUnU9L5rUE5CQ2F9MkqYQVr3f\",\n" +
+		" 10368000000000000000000\n" +
+		"],[\n" +
+		" \"ak_2Vf2gVSswQauKuV2X442586AkFJYxZpCQXSVk4JvYGMx1ciqbB\",\n" +
+		" 3988800000000000000\n" +
+		"],[\n" +
+		" \"ak_2pwi3Dqwmx84FMwU1KFUmnxpEABAkSo5L2o4LhAxWZBs9c57kX\",\n" +
+		" 198554400000000000000\n" +
+		"],[\n" +
+		" \"ak_2g2yq6RniwW1cjKRu4HdVVQXa5GQZkBaXiaVogQXnRxUKpmhS\",\n" +
+		" 1145544000000000000000\n" +
+		"],[\n" +
+		" \"ak_2j2iyGwDnmiDZC9Dc2T8W371MYD9CQxDGSZ2Ne7WT2thY6q888\",\n" +
+		" 1056384000000000000000\n" +
+		"],[\n" +
+		" \"ak_2UFLqHxWGqx9q1ubRdD7dLN9F3vDEHogZZmMmM6jEh8gP7o8SS\",\n" +
+		" 1000000000000000\n" +
+		"],[\n" +
+		" \"ak_ELsVMRbBe4LWEuqNU1pn2UCNpnNfdpHjRJjDFjT4R4yzRTeXt\",\n" +
+		" 1390979520000000015854\n" +
+		"],[\n" +
+		" \"ak_3i4bwAbXBRHBqTDYFVLUSa8byQUeBAFzEgjfYk6rSyjWEXL3i\",\n" +
+		" 395280000000000000000\n" +
+		"],[\n" +
+		" \"ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6\",\n" +
+		" 5134255311623400039181\n" +
+		"],[\n" +
+		" \"ak_28LuZ8CG4LF6LvL47seA2GuCtaNEdXKiVMZP46ykYW8bEcuoVg\",\n" +
+		" 13219200000000000000000\n" +
+		"],[\n" +
+		" \"ak_281fyU5kV5yG6ZEgV9nnprLxRznSUKzxmgn2ZnxBhfD8ryWcuk\",\n" +
+		" 1943999999999999830130\n" +
+		"],[\n" +
+		" \"ak_9XhfcrCtEyPFWPM3GVPC2BCFqetcYV3fDv3EjPpVdR9juAofA\",\n" +
+		" 3370247999999999830130\n" +
+		"],[\n" +
+		" \"ak_24h4GD5wdWmQ5sLFADdZYKjEREMujbTAup5THvthcnPikYozq3\",\n" +
+		" 103680000000000000000\n" +
+		"],[\n" +
+		" \"ak_o27hkgCTN2WZBkHd4vPcbfJPM2tzddv8xy1yaQnoyFEvqpZQK\",\n" +
+		" 651596400000000000000\n" +
+		"],[\n" +
+		" \"ak_2mohSZfcmtnVSs89LmrdhKZFdrCe5tMMV3EmJe3YwTCx5PMZPg\",\n" +
+		" 6320160000000000000\n" +
+		"],[\n" +
+		" \"ak_dXusX5K7S1wgZ2N2t7PZax4ShZTmr8qr4G8div9oM9FrgTGSt\",\n" +
+		" 2248347888000000002734\n" +
+		"],[\n" +
+		" \"ak_QyFYYpgJ1vUGk1Lnk8d79WJEVcAtcfuNHqquuP2ADfxsL6yKx\",\n" +
+		" 15349664872468001358924\n" +
+		"],[\n" +
+		" \"ak_2byTniBYXevCgLKchXgpGYrLhBwBtrGTjgnDB1AXR4Phd9D9mK\",\n" +
+		" 1296000000000000000000\n" +
+		"],[\n" +
+		" \"ak_KnCkeyaTAKQM7BTfDU21vHk1naByDouYWuyUjtmk2KBv6XA93\",\n" +
+		" 12960000000000000000000\n" +
+		"],[\n" +
+		" \"ak_2j7LTVxbWZR21ZtHB2GrQVnHdWnmyWA5Z8tv1fTFbCMDJWSMGW\",\n" +
+		" 1029995999999999915065\n" +
+		"],[\n" +
+		" \"ak_V9SApNmgDGNLQcZWTzYb3PKtmFuwRn8ENdAg7WjZUdiwgkyUP\",\n" +
+		" 19524384000000000000000\n" +
+		"],[\n" +
+		" \"ak_QepsiSXrKpvTum16vRHaiA9NfrR7HgSdbRm6o4NiKRdWHivxb\",\n" +
+		" 1153440000000000000000\n" +
+		"],[\n" +
+		" \"ak_GNt3cUc9iPGHnnMMZMhxGD6oxqoeY8YnkyNuJWiHCRXQu7rxR\",\n" +
+		" 483868080000000016797\n" +
+		"],[\n" +
+		" \"ak_22HBW4s8HoCSa6ZKkd7CtFhs7vdBQ5Sgahi7FbRhp7xQ429WG2\",\n" +
+		" 2006250119999999986693\n" +
+		"],[\n" +
+		" \"ak_2mhBmzVv82SvtKATNBxfD1JhbLBrRNZZmah3QMqRkcK1SP3Bka\",\n" +
+		" 1876284000000000000000\n" +
+		"],[\n" +
+		" \"ak_2EETVuL9MaN8XjzeKVn42swLSf3fHpUTDMK1CEHnckRNKeK8z5\",\n" +
+		" 323838000000000000000\n" +
+		"],[\n" +
+		" \"ak_2UCUD59aWZyyhZzZbUdxoyP94r3mz9GvkH49HzJjsfC8MYqVPn\",\n" +
+		" 181000000000000000000\n" +
+		"],[\n" +
+		" \"ak_25rsqRgVpcaD3fSZxCQVcyi4VNK3CTqf8CbzsnGtHCeu3ivrM1\",\n" +
+		" 5721381999999999830130\n" +
+		"],[\n" +
+		" \"ak_2nAajTCx2kme7MWJTr2VwQABN9LPBusU4shH4HmXPQhHjf2x77\",\n" +
+		" 324000000000000000000\n" +
+		"],[\n" +
+		" \"ak_tijrWQFtt6gRkudL7wVCupUE8iKoTuXz9sT2Rt9TWNSn6WoaL\",\n" +
+		" 65160000000000000000\n" +
+		"] ]", address) {
+
+		myBalanceV1, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxAddress, "getAccountsHeight", []string{address})
+		switch myBalanceV1.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
+		case map[string]interface{}:
+			data := myBalanceV1.(map[string]interface{})
+			balance64, _ := data["count"].(json.Number).Float64()
+			myContractBalanceV1 = balance64
+		}
 	}
 
+
 	if strings.Contains("ak_2g2yq6RniwW1cjKRu4HdVVQXa5GQZkBaXiaVogQXnRxUKpmhS\",270824000000000000000],	[\"ak_3i4bwAbXBRHBqTDYFVLUSa8byQUeBAFzEgjfYk6rSyjWEXL3i\",259200000000000000000],	[\"ak_9XhfcrCtEyPFWPM3GVPC2BCFqetcYV3fDv3EjPpVdR9juAofA\",129600000000000000000],	[\"ak_ELsVMRbBe4LWEuqNU1pn2UCNpnNfdpHjRJjDFjT4R4yzRTeXt\",1390979520000000015854],	[\"ak_Evidt2ZUPzYYPWhestzpGsJ8uWzB1NgMpEvHHin7GCfgWLpjv\",499977516107119999999972654],	[\"ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH\",0],	[\"ak_QyFYYpgJ1vUGk1Lnk8d79WJEVcAtcfuNHqquuP2ADfxsL6yKx\",321088000000000000000],	[\"ak_V9SApNmgDGNLQcZWTzYb3PKtmFuwRn8ENdAg7WjZUdiwgkyUP\",84384000000000000000],	[\"ak_XtJGJrJuvxduT1HFMye4PuEkfUnU9L5rUE5CQ2F9MkqYQVr3f\",648000000000000000000],	[\"ak_fGPGYbqkEyWMV8R4tvQZznpzt28jb54EinF84TRSVCi997kiJ\",2448000000000000000],	[\"ak_o27hkgCTN2WZBkHd4vPcbfJPM2tzddv8xy1yaQnoyFEvqpZQK\",3596400000000000000],	[\"ak_tM5FE5HZSxUvDNAcBKMpSM9iXdsLviJ6tXffiH3BNpFrvgRoR\",383304960000000000000],	[\"ak_22HBW4s8HoCSa6ZKkd7CtFhs7vdBQ5Sgahi7FbRhp7xQ429WG2\",301216320000000007927],	[\"ak_25rsqRgVpcaD3fSZxCQVcyi4VNK3CTqf8CbzsnGtHCeu3ivrM1\",842670000000000000000],	[\"ak_281fyU5kV5yG6ZEgV9nnprLxRznSUKzxmgn2ZnxBhfD8ryWcuk\",128952000000000000000],	[\"ak_28LuZ8CG4LF6LvL47seA2GuCtaNEdXKiVMZP46ykYW8bEcuoVg\",13219200000000000000000],	[\"ak_294D9LQa95ckuJi5z7Who4TzKZWwEGimsyv1ZKM7osPE9c8Bx7\",521424000000000000000],	[\"ak_2JJNMYcnqPaABiSY5omockmv4cCoZefv4XzStAxKe9gM2xYz2r\",582912000000000000000],	[\"ak_2MHJv6JcdcfpNvu4wRDZXWzq8QSxGbhUfhMLR7vUPzRFYsDFw6\",977560560000000001188],	[\"ak_2UCUD59aWZyyhZzZbUdxoyP94r3mz9GvkH49HzJjsfC8MYqVPn\",81000000000000000000],	[\"ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK\",1955121120000000002377],	[\"ak_2gEL91xaQwvdN7psiCcGpSwcEMctTX1CVMT2g8f6NEp48tkvAr\",133164000000000000000],	[\"ak_2j2iyGwDnmiDZC9Dc2T8W371MYD9CQxDGSZ2Ne7WT2thY6q888\",213984000000000000000],	[\"ak_2mhBmzVv82SvtKATNBxfD1JhbLBrRNZZmah3QMqRkcK1SP3Bka\",33264000000000000000]", address) {
-		myBalanceV1Old, _, _ := CallStaticContractFunction(address, ContractBoxOldAddress, "getAccountsHeight", []string{address})
+		myBalanceV1Old, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxOldAddress, "getAccountsHeight", []string{address})
+		println(myBalanceV1Old)
 		data := myBalanceV1Old.(map[string]interface{})
 		myContractBalanceV1Old, _ = data["count"].(json.Number).Float64()
 	}
 
 	myContractBalances := utils.FormatTokens(myContractBalanceV1+myContractBalanceV1Old+myContractBalanceV2, 5)
 
-	contractBalanceOld, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxOldAddress, "getContractBalance", []string{})
-	contractBalanceV1Old, _ = contractBalanceOld.(json.Number).Float64()
+	accountNet, _ := ApiGetAccount(strings.Replace(ContractBoxOldAddress, "ct_", "ak_", -1))
+	contractBalanceV1Old, _ = strconv.ParseFloat(accountNet.Balance.String(), 64)
 
-	contractBalance, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxAddress, "getContractBalance", []string{})
-	contractBalanceV1, _ = contractBalance.(json.Number).Float64()
+	accountNet, _ = ApiGetAccount(strings.Replace(ContractBoxAddress, "ct_", "ak_", -1))
+	contractBalanceV1, _ = strconv.ParseFloat(accountNet.Balance.String(), 64)
 
-	contractBalanceNew, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxV2Address, "getContractBalance", []string{})
-	contractBalanceV2, _ = contractBalanceNew.(json.Number).Float64()
+	accountNet, _ = ApiGetAccount(strings.Replace(ContractBoxV2Address, "ct_", "ak_", -1))
+	contractBalanceV2, _ = strconv.ParseFloat(accountNet.Balance.String(), 64)
+
+	//contractBalanceOld, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxOldAddress, "getContractBalance", []string{})
+	//contractBalanceV1Old, _ = contractBalanceOld.(json.Number).Float64()
+	//
+	//contractBalance, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxAddress, "getContractBalance", []string{})
+	//contractBalanceV1, _ = contractBalance.(json.Number).Float64()
+	//
+	//contractBalanceNew, _, _ := CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ContractBoxV2Address, "getContractBalance", []string{})
+	//contractBalanceV2, _ = contractBalanceNew.(json.Number).Float64()
 
 	ontractBalances := utils.FormatTokens(contractBalanceV1+contractBalanceV1Old+contractBalanceV2, 5)
+
 
 	//myResult, _, err2 := CallStaticContractFunction(address, ContractBoxAddress, "getAccountsHeight", []string{address})
 	//
@@ -970,13 +1114,12 @@ func (c *ApiContractRecordController) Post() {
 func (c *ApiContractSwapRecordController) Post() {
 
 	ctId := c.GetString("ct_id")
-	address := c.GetString("address")
+	coinAddress := c.GetString("coin_address")
 
 	if ctId == "" {
-		ctId = ContractBoxAddress
+		ctId = ContractSwapAddress
 	}
-
-	myResult, _, err := CallStaticContractFunction(address, ctId, "getAccountsHeight", []string{address})
+	myResult, _, err := CallStaticContractFunction("ak_2g2yq6RniwW1cjKRu4HdVVQXa5GQZkBaXiaVogQXnRxUKpmhS", ctId, "get_swaps_icon", []string{coinAddress})
 
 	if err != nil {
 		if "Error: Account not found" == err.Error() {
@@ -986,26 +1129,168 @@ func (c *ApiContractSwapRecordController) Post() {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
-	blockHeight := ApiBlocksTop()
 	switch myResult.(type) {
 	case map[string]interface{}:
 		data := myResult.(map[string]interface{})
-		heights, _ := data["heights"].([]interface{})
+		account_map, _ := data["account_map"].([]interface{})
 		var items []interface{}
-		for i := 0; i < len(heights); i++ {
+		for i := 0; i < len(account_map); i++ {
 			var item = map[string]interface{}{}
-			height := heights[i].([]interface{})
-			model := height[1].(map[string]interface{})
+			account := account_map[i].([]interface{})
+			model := account[1].(map[string]interface{})
 
 			item["account"] = model["account"]
-			item["unlock_height"] = model["unlock_height"]
-			item["continue_height"] = model["continue_height"]
-			item["day"] = model["day"]
-			item["height"] = blockHeight
-			number, _ := model["number"].(json.Number).Float64()
-			tokenNumber, _ := model["token_number"].(json.Number).Float64()
-			item["number"] = utils.FormatTokens(number, 2)
-			item["token_number"] = utils.FormatTokens(tokenNumber, 5)
+			ae, _ := model["ae"].(json.Number).Float64()
+			item["ae"] = utils.FormatTokens(ae, 2)
+
+			count, _ := model["count"].(json.Number).Float64()
+			item["count"] = utils.FormatTokens(count, 2)
+			item["coin"] = model["coin"]
+
+			items = append(items, item)
+		}
+		if items == nil {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.SuccessJson(items)
+	}
+}
+
+func (c *ApiContractSwapRecordMyController) Post() {
+
+	ctId := c.GetString("ct_id")
+	address := c.GetString("address")
+
+	if ctId == "" {
+		ctId = ContractSwapAddress
+	}
+	myResult, _, err := CallStaticContractFunction(address, ctId, "get_accounts_address", []string{address})
+
+	if err != nil {
+		if "Error: Account not found" == err.Error() {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	switch myResult.(type) {
+	case map[string]interface{}:
+		data := myResult.(map[string]interface{})
+		account_map, _ := data["coin_map"].([]interface{})
+		var items []interface{}
+		for i := 0; i < len(account_map); i++ {
+			var item = map[string]interface{}{}
+			account := account_map[i].([]interface{})
+			model := account[1].(map[string]interface{})
+
+			item["account"] = model["account"]
+			ae, _ := model["ae"].(json.Number).Float64()
+			item["ae"] = utils.FormatTokens(ae, 2)
+
+			count, _ := model["count"].(json.Number).Float64()
+			item["count"] = utils.FormatTokens(count, 2)
+			item["coin"] = model["coin"]
+
+			items = append(items, item)
+		}
+		if items == nil {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.SuccessJson(items)
+	}
+}
+
+func (c *ApiContractSwapRecordMyBuyController) Post() {
+
+	ctId := c.GetString("ct_id")
+	address := c.GetString("address")
+
+	if ctId == "" {
+		ctId = ContractSwapAddress
+	}
+	myResult, _, err := CallStaticContractFunction(address, ctId, "get_accounts_buy_records", []string{address})
+
+	if err != nil {
+		if "Error: Account not found" == err.Error() {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	switch myResult.(type) {
+	case []interface{}:
+		account_map, _ := myResult.([]interface{})
+		var items []interface{}
+		for i := 0; i < len(account_map); i++ {
+			var item = map[string]interface{}{}
+			model := account_map[i].(map[string]interface{})
+
+			item["buy_address"] = model["buy_address"]
+			item["sell_address"] = model["sell_address"]
+			item["c_time"] = model["c_time"]
+			item["p_time"] = model["p_time"]
+			item["c_height"] = model["c_height"]
+			item["p_height"] = model["p_height"]
+			ae, _ := model["ae"].(json.Number).Float64()
+			item["ae"] = utils.FormatTokens(ae, 2)
+
+			count, _ := model["count"].(json.Number).Float64()
+			item["count"] = utils.FormatTokens(count, 2)
+			item["coin"] = model["coin"]
+
+			items = append(items, item)
+		}
+		if items == nil {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.SuccessJson(items)
+	}
+}
+func (c *ApiContractSwapRecordMySellController) Post() {
+
+	ctId := c.GetString("ct_id")
+	address := c.GetString("address")
+
+	if ctId == "" {
+		ctId = ContractSwapAddress
+	}
+	myResult, _, err := CallStaticContractFunction(address, ctId, "get_accounts_sell_records", []string{address})
+
+	if err != nil {
+		if "Error: Account not found" == err.Error() {
+			c.SuccessJson([]JsonData{})
+			return
+		}
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+
+	switch myResult.(type) {
+	case []interface{}:
+		account_map, _ := myResult.([]interface{})
+		var items []interface{}
+		for i := 0; i < len(account_map); i++ {
+			var item = map[string]interface{}{}
+			model := account_map[i].(map[string]interface{})
+			item["buy_address"] = model["buy_address"]
+			item["sell_address"] = model["sell_address"]
+			item["c_time"] = model["c_time"]
+			item["p_time"] = model["p_time"]
+			item["c_height"] = model["c_height"]
+			item["p_height"] = model["p_height"]
+			ae, _ := model["ae"].(json.Number).Float64()
+			item["ae"] = utils.FormatTokens(ae, 2)
+
+			count, _ := model["count"].(json.Number).Float64()
+			item["count"] = utils.FormatTokens(count, 2)
+			item["coin"] = model["coin"]
 
 			items = append(items, item)
 		}
