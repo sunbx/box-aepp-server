@@ -143,7 +143,7 @@ payable contract ABCLockContract =
         state.token.total_supply()-balance
       None => 0
 
-  //Get the due tokens calculated in days
+  //Get the due tokens.json calculated in days
   //获取天数对应的奖励
   stateful entrypoint getDayCount(day: int ,number: int): int =
     if(day == 1)
@@ -157,7 +157,7 @@ payable contract ABCLockContract =
     else
       (number * 10) / 10 * 1
 
-  //To obtain the total amount of mined ae tokens
+  //To obtain the total amount of mined ae tokens.json
   //获取当前质押数量的奖励
   stateful entrypoint getMineCount(balance: int, number: int): int =
     if( balance >= 30000000 * state.decimals)
@@ -177,7 +177,7 @@ payable contract ABCLockContract =
     else
       (number * 10) / 10
 
-  //Get the due tokens from mining
+  //Get the due tokens.json from mining
   //获取当前挖矿的token 的奖励
   stateful entrypoint getMineOutputCount(balance_token: int, number: int): int =
     if( balance_token >= 400000000 * state.decimals)
@@ -214,7 +214,7 @@ payable contract ABCLockContract =
      //(Chain.block_height + 2 * day)
      //(Chain.block_height + 480 * day)
 
-  //Use ae to mine tokens
+  //Use ae to mine tokens.json
   //锁仓
   payable stateful entrypoint lock(day: int) =
 

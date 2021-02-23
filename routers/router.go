@@ -9,6 +9,13 @@ func init() {
 
 	//获取当前区块高度
 	beego.Router("/", &controllers.HomeController{})
+
+	//获取banner
+	beego.Router("/api/banner", &controllers.BannerController{})
+
+	//获取token列表
+	beego.Router("/api/tokens/list", &controllers.TokenListController{})
+
 	//获取当前区块高度
 	beego.Router("/api/ae/block_top", &controllers.BlockTopController{})
 

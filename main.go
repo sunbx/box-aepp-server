@@ -9,7 +9,7 @@ import (
 
 //引入数据模型
 func init() {
-	orm.Debug = false
+	orm.Debug = true
 	//注册驱动
 	//orm.RegisterDriver("mysql", orm.DRMySQL)
 	//注册默认数据库

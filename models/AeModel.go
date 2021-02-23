@@ -13,10 +13,12 @@ import (
 	"github.com/aeternity/aepp-sdk-go/naet"
 	"github.com/aeternity/aepp-sdk-go/swagguard/node/models"
 	"github.com/aeternity/aepp-sdk-go/transactions"
+	"github.com/beego/cache"
 	"github.com/tyler-smith/go-bip39"
 	"io/ioutil"
 	"math/big"
 	"strconv"
+	"time"
 )
 
 
@@ -129,7 +131,7 @@ func ApiSpend(account *account.Account, recipientId string, amount float64, data
 			hash, err := aeternity.SignBroadcast(spendTx, account, node, "ae_mainnet")
 			return hash, err
 		} else {
-			return nil, errors.New("tokens number insufficient")
+			return nil, errors.New("tokens.json number insufficient")
 		}
 	} else {
 		return nil, err
@@ -289,6 +291,71 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 
 		cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))] = callData
 	}
+
+	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
+	if err != nil {
+		return nil, function, err
+	}
+
+	w := &bytes.Buffer{}
+	err = callTx.EncodeRLP(w)
+	if err != nil {
+		println(callTx.CallData)
+		return nil, function, err
+	}
+
+	txStr := binary.Encode(binary.PrefixTransaction, w.Bytes())
+
+	body := "{\"accounts\":[{\"pub_key\":\"" + address + "\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\"" + txStr + "\"}]}"
+
+	response := utils.PostBody(NodeURLD+"/v2/debug/transactions/dry-run", body, "application/json")
+	var tryRun TryRun
+	err = json.Unmarshal([]byte(response), &tryRun)
+	if err != nil {
+		return nil, function, err
+	}
+
+	if v, ok := cacheResultlMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
+		return v, function, err
+	} else {
+		decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+		cacheResultlMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+		return decodeResult, function, err
+	}
+
+
+}
+
+
+var tokenCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"12000"}`)
+
+func TokenBalanceFunction(address string, ctID string, t string,function string, args []string) (s interface{}, functionEncode string, e error) {
+	node := naet.NewNode(NodeURL, false)
+	compile := naet.NewCompiler(CompilerURL, false)
+	var source []byte
+	 if t == "ABC" {
+		source, _ = ioutil.ReadFile("contract/AbcContract.aes")
+	} else if t == "full" {
+		source, _ = ioutil.ReadFile("contract/AEX9Contract.aes")
+	}else if t == "basic" {
+		 source, _ = ioutil.ReadFile("contract/AEX9BasicContract.aes")
+	 }
+
+	var callData = ""
+
+	if tokenCache.IsExist(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))) {
+		callData =tokenCache.Get(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))).(string)
+	}else{
+		data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		if err != nil {
+			return nil, function, err
+		}
+		callData = data
+		_ = tokenCache.Put(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)), callData, 1000*time.Hour)
+	}
+
+
+
 
 	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
 	if err != nil {

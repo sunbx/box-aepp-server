@@ -120,7 +120,7 @@ payable contract AMBLockContract =
         state.token.total_supply()-balance
       None => 0
 
-  //Get the due tokens calculated in days
+  //Get the due tokens.json calculated in days
   stateful entrypoint getDayCount(day: int ,number: int): int =
     if(day == 1)
       (number * 10) / 10 * 1
@@ -133,7 +133,7 @@ payable contract AMBLockContract =
     else
       (number * 10) / 10 * 1
 
-  //To obtain the total amount of mined ae tokens
+  //To obtain the total amount of mined ae tokens.json
   stateful entrypoint getMineCount(balance: int, number: int): int =
     if( balance >= 30000000 * state.decimals)
       (number * 3) / 10
@@ -152,7 +152,7 @@ payable contract AMBLockContract =
     else
       (number * 10) / 10
 
-  //Get the due tokens from mining
+  //Get the due tokens.json from mining
   stateful entrypoint getMineOutputCount(balance_token: int, number: int): int =
     if( balance_token >= 400000000 * state.decimals)
       (number * 1) / 10
@@ -180,7 +180,7 @@ payable contract AMBLockContract =
       Some(account) => true
       None => false
 
-  //Use ae to mine tokens
+  //Use ae to mine tokens.json
   payable stateful entrypoint lock(day: int) =
 
     //Minimum support 1ae
