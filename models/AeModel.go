@@ -111,27 +111,42 @@ func ApiGetAccount(address string) (account *models.Account, e error) {
 
 //发起转账
 func ApiSpend(account *account.Account, recipientId string, amount float64, data string) (*aeternity.TxReceipt, error) {
-
+	//获取账户
 	accountNet, e := ApiGetAccount(account.Address)
 	if e != nil {
 		return nil, e
 	}
+	//格式化账户的tokens
 	tokens, err := strconv.ParseFloat(accountNet.Balance.String(), 64)
 	if err == nil {
-		if tokens/1000000000000000000 > amount {
-			node := naet.NewNode(NodeURL, false)
-			//_, _, ttlnoncer := transactions.GenerateTTLNoncer(node)
-			ttlnoncer := transactions.NewTTLNoncer(node)
 
-			spendTx, err := transactions.NewSpendTx(account.Address, recipientId, utils.GetRealAebalanceBigInt(amount), []byte(data), ttlnoncer)
+		//判断账户余额是否大于要转账的余额
+		if tokens/1000000000000000000 >= amount {
+			//获取节点信息
+			node := naet.NewNode(NodeURL, false)
+			//生成ttl
+			ttler := transactions.CreateTTLer(node)
+			noncer := transactions.CreateNoncer(node)
+
+			ttlNoncer := transactions.CreateTTLNoncer(ttler, noncer)
+			//生成转账tx
+			spendTx, err := transactions.NewSpendTx(account.Address, recipientId, utils.GetRealAebalanceBigInt(amount), []byte(data), ttlNoncer)
+
 
 			if err != nil {
 				return nil, err
 			}
+			//广播转账信息
 			hash, err := aeternity.SignBroadcast(spendTx, account, node, "ae_mainnet")
+
+			//err = aeternity.WaitSynchronous(hash, config.Client.WaitBlocks, node)
+
+			if err != nil {
+				return nil, err
+			}
 			return hash, err
 		} else {
-			return nil, errors.New("tokens.json number insufficient")
+			return nil, errors.New("tokens number insufficient")
 		}
 	} else {
 		return nil, err

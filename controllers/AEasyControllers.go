@@ -598,6 +598,19 @@ func (c *ApiUserInfoController) Post() {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
+
+	_, err = ApiGetAccount(address)
+	if err!=nil{
+		print(err.Error())
+		if err.Error() == "Error: Account not found"{
+			account, _ := SigningKeyHexStringAccount(beego.AppConfig.String("AEASY::accountFoundation"))
+			tx, _ := ApiSpend(account, address, 0.001, "Sponsored by China Foundation（中国基金会赞助）")
+			print(tx.Hash)
+
+		}
+	}
+
+
 	c.Ctx.WriteString(string(body))
 }
 func (c *ApiVersionController) Post() {
