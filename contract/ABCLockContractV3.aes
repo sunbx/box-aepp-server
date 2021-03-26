@@ -61,7 +61,7 @@ contract ABCLockContractV3 =
             require(!is_mapping_account_blacklist(Call.caller), "IS_MAPPING_ACCOUNTS_BLACK_LIST_TRUE")
             require(!is_mapping_account(Call.caller), "IS_MAPPING_ACCOUNTS_TRUE")
             require(state.min_lock_count =< count,"MIN_LOCK_COUNT_LOW")
-            // require(Chain.balance(Call.caller) > count, "BALANCE_COUNT_LOW")
+            require(Chain.balance(Call.caller) > count, "BALANCE_COUNT_LOW")
             let account = {account = Call.caller , mapping_count = count , height = Chain.block_height}
             put(state{mapping_accounts[Call.caller] = account, all_count = state.all_count + count})
             count

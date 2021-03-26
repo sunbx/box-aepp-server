@@ -57,7 +57,7 @@ func init() {
 
 	beego.Router("/api/defi/info", &controllers.ApiContractInfoController{})
 
-	//beego.Router("/api/aex9/ranking", &controllers.ApiContractRankingController{})
+	beego.Router("/api/aex9/ranking", &controllers.ApiContractRankingController{})
 
 	beego.Router("/test", &controllers.TESTController{})
 

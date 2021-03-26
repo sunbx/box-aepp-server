@@ -21,15 +21,15 @@ import (
 	"time"
 )
 
-//var NodeUrl = "https://node.aeasy.io"
-//var NodeUrlDebug = "https://debug.aeasy.io"
-//var CompilerUrl = "https://compiler.aeasy.io"
-
-var NodeUrl = "https://testnet.aeternity.io"
-var NodeUrlDebug = "https://testnet.aeternity.io"
+var NodeUrl = "https://node.aeasy.io"
+var NodeUrlDebug = "https://debug.aeasy.io"
 var CompilerUrl = "https://compiler.aeasy.io"
 
-var ABCLockContractV3 = "ct_2defurLnLB1moUpCN5TgsSjVdqo4dyUJYPYQ4kgUNSLGvbrfgN"
+//var NodeUrl = "https://testnet.aeternity.io"
+//var NodeUrlDebug = "https://testnet.aeternity.io"
+//var CompilerUrl = "https://compiler.aeasy.io"
+//ct_2bFV4kxtmUeKTF5Eb5STfnAx6UgxzBqTL1pYLF1GBhcmoQAhLf
+var ABCLockContractV3 = "ct_2W5UZLXySwh5BYXnXocGrzZ4wvLJQza1UPTsvor2UrtvjoFfQt"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
