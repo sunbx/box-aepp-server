@@ -19,81 +19,46 @@ func init() {
 	//获取当前区块高度
 	beego.Router("/api/ae/block_top", &controllers.BlockTopController{})
 
-	//aeasy login
+	//基础数据
 	beego.Router("/api/base/data", &controllers.ApiBaseDataController{})
 
 	//所有域名基础信息
 	beego.Router("/api/names/base", &controllers.NamesBaseController{})
 
-	//转账
-	beego.Router("/api/wallet/transfer", &controllers.WalletTransferController{})
-
-	//广播
-	beego.Router("/api/tx/broadcast", &controllers.TxBroadcastController{}) //广播
-	beego.Router("/api/ae/th_hash", &controllers.ThHashController{})
-
-	//aeasy register
+	//获取转账记录
 	beego.Router("/api/wallet/transfer/record", &controllers.ApiWalletTransferRecordController{})
 
-	//ApiNamesAuctionsController
+	//竞拍中域名-最新
 	beego.Router("/api/names/auctions", &controllers.ApiNamesAuctionsController{})
 
-	//ApiNamesPriceController
+	//竞拍中域名-价格
 	beego.Router("/api/names/price", &controllers.ApiNamesPriceController{})
 
-	//ApiNamesPriceController
+	//即将结束的域名
 	beego.Router("/api/names/over", &controllers.ApiNamesOverController{})
 
-	//ApiNamesPriceController
+	//竞拍中域名-最新-我的
 	beego.Router("/api/names/my/register", &controllers.ApiNamesMyRegisterController{})
 
-	//ApiNamesPriceController
+	//竞拍中域名-即将结束-我的
 	beego.Router("/api/names/my/over", &controllers.ApiNamesMyOverController{})
 
-	//ApiNamesPriceController
-	beego.Router("/api/names/claim", &controllers.ApiNamesAddController{})
-
-	//域名声明
-	beego.Router("/api/names/preclaim", &controllers.PreclaimController{})
-
-	//ApiNamesUpdateController
-	beego.Router("/api/names/update", &controllers.ApiNamesUpdateController{})
-
-	//ApiNamesPriceController
+	//域名详情
 	beego.Router("/api/names/info", &controllers.ApiNamesInfoController{})
 
-	//ApiTransferAddController
-	beego.Router("/api/names/transfer", &controllers.ApiTransferAddController{})
-
-	//ApiNamesPriceController
+	//获取当前用户信息
 	beego.Router("/api/user/info", &controllers.ApiUserInfoController{})
+
+	//获取最新版本号
 	beego.Router("/api/version", &controllers.ApiVersionController{})
-	//ApiNamesPriceController
-	beego.Router("/api/contract/call", &controllers.ApiContractCallController{})
 
-	//static call
-	beego.Router("/api/contract/call/static", &controllers.ApiContractCallStaticController{})
+	//获取具体aex9 abc数量
+	beego.Router("/api/aex9/balance", &controllers.ApiContractBalanceController{})
 
-	//ApiNamesPriceController
-	beego.Router("/api/contract/decode", &controllers.ApiContractDecideController{})
+	beego.Router("/api/defi/info", &controllers.ApiContractInfoController{})
 
+	//beego.Router("/api/aex9/ranking", &controllers.ApiContractRankingController{})
 
-	beego.Router("/api/contract/swap/records", &controllers.ApiContractSwapRecordController{})
-	beego.Router("/api/contract/swap/records/my", &controllers.ApiContractSwapRecordMyController{})
-	beego.Router("/api/contract/swap/records/my/buy", &controllers.ApiContractSwapRecordMyBuyController{})
-	beego.Router("/api/contract/swap/records/my/sell", &controllers.ApiContractSwapRecordMySellController{})
-
-	beego.Router("/api/contract/balance", &controllers.ApiContractBalanceController{})
-	beego.Router("/api/contract/info", &controllers.ApiContractInfoController{})
-
-	beego.Router("/api/contract/record", &controllers.ApiContractRecordController{})
-	beego.Router("/api/contract/ranking", &controllers.ApiContractRankingController{})
-
-	beego.Router("/api/contract/lock", &controllers.ApiContractLockController{})
-	beego.Router("/api/contract/unlock", &controllers.ApiContractDecideController{})
-	beego.Router("/api/contract/continue", &controllers.ApiContractDecideController{})
-
-	beego.Router("/api/contract/transfer", &controllers.ApiContractTransferController{})
 	beego.Router("/test", &controllers.TESTController{})
 
 }
