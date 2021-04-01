@@ -80,14 +80,14 @@ contract ABCLockContractV3 =
     stateful entrypoint
         account_check_balance : (address) => bool
         account_check_balance(addr) =
-            require(is_mapping_account(Call.caller), "IS_MAPPING_ACCOUNTS_FALSE")
-            if(Chain.balance(Call.caller) < get_mapping_account(Call.caller).mapping_count)
-                let account = get_mapping_account(Call.caller)
-                let new_mapping_accounts = Map.delete(Call.caller,state.mapping_accounts)
+            require(is_mapping_account(addr), "IS_MAPPING_ACCOUNTS_FALSE")
+            if(Chain.balance(addr) < get_mapping_account(addr).mapping_count)
+                let account = get_mapping_account(addr)
+                let new_mapping_accounts = Map.delete(addr,state.mapping_accounts)
                 put(state{mapping_accounts = new_mapping_accounts,all_count = state.all_count - account.mapping_count})
 
-                let account_blacklist = {account = Call.caller , count = account.mapping_count ,ae = Chain.balance(Call.caller), height = Chain.block_height}
-                put(state{account_blacklists[Call.caller] = account_blacklist})
+                let account_blacklist = {account = addr , count = account.mapping_count ,ae = Chain.balance(addr), height = Chain.block_height}
+                put(state{account_blacklists[addr] = account_blacklist})
                 true
             else
                 false
@@ -134,14 +134,14 @@ contract ABCLockContractV3 =
             state
 
     stateful entrypoint
-        update_status : (int,int,int,int) => state
-        update_status(base_token_count,max_benefits_height,min_benefits_height,min_lock_count)=
+        update_status : (int,int,int,int,FungibleTokenInterface) => state
+        update_status(base_token_count,max_benefits_height,min_benefits_height,min_lock_count,token)=
             protocol_restrict()
             put(state{
                 mapping_accounts    = state.mapping_accounts,
                 account_blacklists  = state.account_blacklists,
                 all_count           = state.all_count,
-                token               = state.token,
+                token               = token,
                 decimals            = state.decimals,
                 base_token_count    = base_token_count,
                 max_benefits_height = max_benefits_height,
@@ -205,6 +205,14 @@ contract ABCLockContractV3 =
                 height       = account.height,
                 all_count    = state.all_count}
 
+    entrypoint
+        is_account_check_balance : (address) => bool
+        is_account_check_balance(addr) =
+            require(is_mapping_account(addr), "IS_MAPPING_ACCOUNTS_FALSE")
+            if(Chain.balance(addr) < get_mapping_account(addr).mapping_count)
+                true
+            else
+                false
 
 
     function
@@ -225,5 +233,4 @@ contract ABCLockContractV3 =
         protocol_restrict : () => unit
         protocol_restrict() =
             require(Call.origin == Contract.creator, "PROTOCOL_RESTRICTED")
-
 

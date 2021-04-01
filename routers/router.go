@@ -10,6 +10,9 @@ func init() {
 	//获取当前区块高度
 	beego.Router("/", &controllers.HomeController{})
 
+	//获取当前区块高度
+	beego.Router("/server", &controllers.ServerController{})
+
 	//获取banner
 	beego.Router("/api/banner", &controllers.BannerController{})
 
@@ -58,6 +61,8 @@ func init() {
 	beego.Router("/api/defi/info", &controllers.ApiContractInfoController{})
 
 	beego.Router("/api/aex9/ranking", &controllers.ApiContractRankingController{})
+
+	beego.Router("/api/defi/status", &controllers.DefiStatusController{})
 
 	beego.Router("/test", &controllers.TESTController{})
 

@@ -17,6 +17,7 @@ import (
 	"github.com/tyler-smith/go-bip39"
 	"io/ioutil"
 	"math/big"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -25,11 +26,17 @@ var NodeUrl = "https://node.aeasy.io"
 var NodeUrlDebug = "https://debug.aeasy.io"
 var CompilerUrl = "https://compiler.aeasy.io"
 
+
+var LastHeight = 0
+var LockAccountSize = 0
+var ConsumingTime int64 = 0
+var IsCheckIng bool = false
+
 //var NodeUrl = "https://testnet.aeternity.io"
 //var NodeUrlDebug = "https://testnet.aeternity.io"
 //var CompilerUrl = "https://compiler.aeasy.io"
-//ct_2bFV4kxtmUeKTF5Eb5STfnAx6UgxzBqTL1pYLF1GBhcmoQAhLf
-var ABCLockContractV3 = "ct_2W5UZLXySwh5BYXnXocGrzZ4wvLJQza1UPTsvor2UrtvjoFfQt"
+//ct_VxetjnAkrWpCHkqkGJuda8W5Ni6ireEXPHJpACv82gLWySp5e
+var ABCLockContractV3 = "ct_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -155,41 +162,60 @@ type CallInfo struct {
 	ReturnValue string `json:"return_value"`
 }
 
-//正常调用合约
-func CallContractFunction(address string, ctID string, function string, args []string, amount float64) (tx *transactions.ContractCallTx, e error) {
-	c := naet.NewCompiler(CompilerUrl, false)
-	node := naet.NewNode(NodeUrl, false)
-	ttLer := transactions.CreateTTLer(node)
-	nonce := transactions.CreateNoncer(node)
-	ttNonce := transactions.CreateTTLNoncer(ttLer, nonce)
-	var callData = function
-	if v, ok := cacheCallMap["CALL#"+function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)]; ok {
-		callData = v
-	} else {
-		var source []byte
-		if ctID == ABCLockContractV3 {
-			source, _ = ioutil.ReadFile("contract/ABCLockContractV3.aes")
-		} else {
-			source, _ = ioutil.ReadFile("contract/AEX9Contract.aes")
-		}
-		callData, _ = c.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
-		cacheCallMap["CALL#"+function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)] = callData
-	}
-	data, _ := c.DecodeData(callData, "")
-	println(data)
 
-	callTx, err := transactions.NewContractCallTx(address, ctID, utils.GetRealAebalanceBigInt(amount), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, ttNonce)
+//正常调用合约
+func CallContractFunction(account *account.Account, ctID string, function string, args []string) (s interface{}, e error) {
+	//获取节点信息
+	n := naet.NewNode(NodeUrl, false)
+	//获取编译器信息
+	c := naet.NewCompiler(CompilerUrl, false)
+	//创建上下文
+	ctx := aeternity.NewContext(account, n)
+	//关联编译器
+	ctx.SetCompiler(c)
+	//创建合约
+	contract := aeternity.NewContract(ctx)
+	var source []byte
+	if ctID == ABCLockContractV3 {
+		source, _ = ioutil.ReadFile("contract/ABCLockContractV3.aes")
+	} else {
+		source, _ = ioutil.ReadFile("contract/AEX9Contract.aes")
+	}
+	//调用合约代码
+	callReceipt, err := contract.Call(ctID, string(source), function, args, config.CompilerBackendFATE)
 	if err != nil {
 		return nil, err
 	}
-	return callTx, err
-}
 
-//存放调用的缓存
-var cacheCallMap = make(map[string]string)
+	resp, err := http.Get(NodeUrl + "/v2/transactions/" + callReceipt.Hash + "/info")
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	//获取合约调用信息
+	//response := Get(NodeURL + "/v2/transactions/" + callReceipt.Hash + "/info")
+	//解析jSON
+	var callInfoResult CallInfoResult
+	err = json.Unmarshal(body, &callInfoResult)
+	if err != nil {
+		return nil, err
+	}
+	//解析结果
+	decodeResult, err := c.DecodeCallResult(callInfoResult.CallInfo.ReturnType, callInfoResult.CallInfo.ReturnValue, function, string(source), config.Compiler.Backend)
+	if err != nil {
+		return nil, err
+	}
+	//返回结果
+	return decodeResult, err
+}
 
 //存放解析结果的缓存
 var cacheResultMap = make(map[string]interface{})
+
+var callCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"12000"}`)
 
 //获取合约数据try-run
 func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
@@ -203,27 +229,17 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	}
 
 	var callData = ""
-	if v, ok := cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))]; ok {
-		if ok && len(v) > 5 {
-			callData = v
 
-		} else {
-			data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
-			if err != nil {
-				return nil, function, err
-			}
-			callData = data
-			cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))] = callData
-		}
 
+	if callCache.IsExist(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))) {
+		callData = callCache.Get(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))).(string)
 	} else {
 		data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
 		if err != nil {
 			return nil, function, err
 		}
 		callData = data
-
-		cacheCallMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))] = callData
+		_ = callCache.Put(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)), callData, 1000*time.Hour)
 	}
 
 	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
@@ -248,6 +264,7 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	if err != nil {
 		return nil, function, err
 	}
+
 
 	if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
 		return v, function, err

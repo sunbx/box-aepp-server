@@ -19,6 +19,9 @@ type BlockTopController struct {
 type HomeController struct {
 	BaseController
 }
+type ServerController struct {
+	BaseController
+}
 type ApiBaseDataController struct {
 	BaseController
 }
@@ -72,6 +75,10 @@ type ApiContractRankingController struct {
 	BaseController
 }
 
+type DefiStatusController struct {
+	BaseController
+}
+
 var HOST = "https://aeasy.io"
 
 func (c *BlockTopController) Post() {
@@ -122,6 +129,10 @@ func (c *HomeController) Get() {
 
 		c.TplName = "index.html"
 	}
+}
+
+func (c *ServerController) Get() {
+	c.TplName = "ae.html"
 
 }
 
@@ -391,23 +402,22 @@ func (c *ApiContractInfoController) Post() {
 		account := data["account"].(string)
 		count, _ := data["count"].(json.Number).Float64()
 		countFormat := utils.FormatTokens(count, 2)
-		if countFormat == "0"{
+		if countFormat == "0" {
 			countFormat = "0.00"
 		}
 
 		token, _ := data["token"].(json.Number).Float64()
 		tokenFormat := utils.FormatTokens(token, 7)
-		if tokenFormat == "0"{
+		if tokenFormat == "0" {
 			tokenFormat = "0.0000000"
 		}
 
 		allCount, _ := data["all_count"].(json.Number).Float64()
 		allCountFormat := utils.FormatTokens(allCount, 0)
 
-		if allCountFormat == "0"{
+		if allCountFormat == "0" {
 			allCountFormat = "0"
 		}
-
 
 		height := data["height"].(json.Number)
 		afterHeight := data["after_height"].(json.Number)
@@ -426,7 +436,6 @@ func (c *ApiContractInfoController) Post() {
 	c.ErrorJson(-500, "ERROR", JsonData{})
 }
 
-
 type RankingSlice []Ranking
 
 func (s RankingSlice) Less(i, j int) bool {
@@ -442,8 +451,8 @@ func (s RankingSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (c *ApiContractRankingController) Post() {
 
 	ctId := c.GetString("ct_id")
-
-	result, _, err := models.CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", ctId, "balance", []string{"ak_2W5UZLXySwh5BYXnXocGrzZ4wvLJQza1UPTsvor2UrtvjoFfQt"})
+	ctId = "ct_7UfopTwsRuLGFEcsScbYgQ6YnySXuyMxQWhw6fjycnzS5Nyzq"
+	result, _, err := models.CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", ctId, "balance", []string{"ak_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD"})
 	var output = 0.0
 
 	switch result.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
@@ -451,7 +460,7 @@ func (c *ApiContractRankingController) Post() {
 		data := result.(map[string]interface{})
 		balances := data["Some"].([]interface{})
 		output, _ = balances[0].(json.Number).Float64()
-		output = 50000000*1000000000000000000 - output
+
 	}
 
 	resultOwner, _, err := models.CallStaticContractFunction("ak_2MPzBmtTVXDyBBZALD2JfHrzwdpr8tXZGhu3FRtPJ9sEEPXV2T", ctId, "balance", []string{"ak_2VuSVq5ESa5f7HXhqfxn742mexHApSHGd2Erxu2PGxgfdYYmyq"})
@@ -462,8 +471,10 @@ func (c *ApiContractRankingController) Post() {
 		data := resultOwner.(map[string]interface{})
 		balances := data["Some"].([]interface{})
 		outputOwner, _ = balances[0].(json.Number).Float64()
-		output = output - outputOwner
+		output = output + outputOwner
+
 	}
+	output = 50000000*1000000000000000000 - output
 
 	myResult, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ctId, "balances", []string{})
 	if err != nil {
@@ -486,8 +497,8 @@ func (c *ApiContractRankingController) Post() {
 
 			if data[i].([]interface{})[0].(string) == "ak_2VuSVq5ESa5f7HXhqfxn742mexHApSHGd2Erxu2PGxgfdYYmyq" ||
 				data[i].([]interface{})[0].(string) == "ak_GUpbJyXiKTZB1zRM8Z8r2xFq26sKcNNtz6i83fvPUpKgEAgjH" ||
-				data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK"||
-				data[i].([]interface{})[0].(string) == "ak_2W5UZLXySwh5BYXnXocGrzZ4wvLJQza1UPTsvor2UrtvjoFfQt" {
+				data[i].([]interface{})[0].(string) == "ak_2Xu6d6W4UJBWyvBVJQRHASbQHQ1vjBA7d1XUeY8SwwgzssZVHK" ||
+				data[i].([]interface{})[0].(string) == "ak_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD" {
 				continue
 			}
 
@@ -510,6 +521,48 @@ func (c *ApiContractRankingController) Post() {
 		}
 
 	}
+}
+
+func (c *DefiStatusController) Get() {
+
+	mappingAccounts, _, _ := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ABCLockContractV3, "get_mapping_accounts", []string{})
+	var mappingAccountsList []string = []string{}
+	switch mappingAccounts.(type) {
+	case []interface{}:
+		data := mappingAccounts.([]interface{})
+		for i := 0; i < len(data); i++ {
+			account := data[i].([]interface{})[1].(map[string]interface{})
+			address := account["account"].(string)
+			mappingCount, _ := account["mapping_count"].(json.Number).Float64()
+			mappingCountFormat := utils.FormatTokens(mappingCount, 2)
+			mappingAccountsList = append(mappingAccountsList, address+","+mappingCountFormat)
+		}
+	}
+
+	getAccountsBlacklists, _, _ := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ABCLockContractV3, "get_accounts_blacklists", []string{})
+	var accountBlacklistList []string = []string{}
+	switch getAccountsBlacklists.(type) {
+	case []interface{}:
+		data := getAccountsBlacklists.([]interface{})
+		for i := 0; i < len(data); i++ {
+			address := data[i].([]interface{})[0].(string)
+			accountBlacklistList = append(accountBlacklistList, address)
+		}
+	}
+
+	statusResult, _, _ := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", models.ABCLockContractV3, "get_status", []string{})
+
+	blocksTop := models.ApiBlocksTop()
+	c.SuccessJson(map[string]interface{}{
+		"last_height":         models.LastHeight,
+		"blocks_top":          blocksTop,
+		"lock_account_size":   models.LockAccountSize,
+		"call_time":           models.ConsumingTime,
+		"accounts_blacklists": accountBlacklistList,
+		"mapping_accounts":    mappingAccountsList,
+		"contract_state":      statusResult,
+	})
+
 }
 
 func Decimal(value float64) float64 {
