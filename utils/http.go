@@ -61,13 +61,13 @@ func PostBody(url string, data string, contentType string) (content string) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
 	req.Header.Add("content-type", contentType)
 	if err != nil {
-		panic(err)
+		return ""
 	}
 	defer req.Body.Close()
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, error := client.Do(req)
 	if error != nil {
-		panic(error)
+		return ""
 	}
 	defer resp.Body.Close()
 	result, _ := ioutil.ReadAll(resp.Body)
