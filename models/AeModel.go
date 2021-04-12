@@ -213,7 +213,7 @@ func CallContractFunction(account *account.Account, ctID string, function string
 }
 
 //存放解析结果的缓存
-var cacheResultMap = make(map[string]interface{})
+//var cacheResultMap = make(map[string]interface{})
 
 var callCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"12000"}`)
 
@@ -265,15 +265,18 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 		return nil, function, err
 	}
 
+	//
+	//if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
+	//	return v, function, err
+	//} else {
+	//	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	//	cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+	//	return decodeResult, function, err
+	//}
 
-	if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
-		return v, function, err
-	} else {
-		decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
-		cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
-		return decodeResult, function, err
-	}
-
+	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	//cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+	return decodeResult, function, err
 }
 
 var tokenCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"12000"}`)
@@ -325,13 +328,16 @@ func TokenBalanceFunction(address string, ctID string, t string, function string
 		return nil, function, err
 	}
 
-	if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
-		return v, function, err
-	} else {
-		decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
-		cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
-		return decodeResult, function, err
-	}
+	//if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
+	//	return v, function, err
+	//} else {
+	//	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	//	cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+	//	return decodeResult, function, err
+	//}
+	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	//cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
+	return decodeResult, function, err
 
 }
 

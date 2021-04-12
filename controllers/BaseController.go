@@ -42,4 +42,3 @@ func (c *BaseController) ErrorJson(code int, msg interface{}, data interface{}) 
 
 	c.Ctx.WriteString(string(jsons))
 }
-

@@ -35,7 +35,7 @@ func StrTime(atime int64) string {
 			continue
 		}
 		var temp = math.Floor(float64(ct / byTime[i]))
-		ct = ct % byTime[i];
+		ct = ct % byTime[i]
 		if temp > 0 {
 			var tempStr string
 			tempStr = strconv.FormatFloat(temp, 'f', -1, 64)

@@ -12,9 +12,6 @@ type ArticleDataController struct {
 	BaseController
 }
 
-
-
-
 type Article struct {
 	Id            int64    `json:"id"`
 	Title         Rendered `json:"title"`
@@ -28,8 +25,6 @@ type Rendered struct {
 type Media struct {
 	SourceUrl string `json:"source_url"`
 }
-
-
 
 func (c *ArticleDataController) Get() {
 	response := utils.Get("https://www.aechina.io/wp-json/wp/v2/posts?page=1")
@@ -55,8 +50,6 @@ func (c *ArticleDataController) Get() {
 	}
 	c.SuccessJson(JsonData{})
 }
-
-
 
 //
 //
