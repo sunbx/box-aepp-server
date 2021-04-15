@@ -1,0 +1,26 @@
+
+{
+  "code": 200,
+  "msg": "success",
+  "time": 1618293795352,
+  "data": [
+    {
+      "name": "ABC",
+      "ct_address": "ct_7UfopTwsRuLGFEcsScbYgQ6YnySXuyMxQWhw6fjycnzS5Nyzq",
+      "low_token_count" : 1,
+      "low_ae_count"    : 1
+    },
+    {
+      "name": "AEG",
+      "ct_address": "ct_BwJcRRa7jTAvkpzc2D16tJzHMGCJurtJMUBtyyfGi2QjPuMVv",
+      "low_token_count" : 10000.00,
+      "low_ae_count"    : 1
+    },
+    {
+      "name": "WTT",
+      "ct_address": "ct_uGk1rkSdccPKXLzS259vdrJGTWAY9sfgVYspv6QYomxvWZWBM",
+      "low_token_count" : 100.00,
+      "low_ae_count"    : 1
+    }
+  ]
+}
