@@ -7,20 +7,20 @@
     {
       "name": "ABC",
       "ct_address": "ct_7UfopTwsRuLGFEcsScbYgQ6YnySXuyMxQWhw6fjycnzS5Nyzq",
-      "low_token_count" : 1,
-      "low_ae_count"    : 1
+      "low_token_count" : 1.0,
+      "low_ae_count"    : 1.0
     },
     {
       "name": "AEG",
       "ct_address": "ct_BwJcRRa7jTAvkpzc2D16tJzHMGCJurtJMUBtyyfGi2QjPuMVv",
       "low_token_count" : 10000.00,
-      "low_ae_count"    : 1
+      "low_ae_count"    : 1.0
     },
     {
       "name": "WTT",
       "ct_address": "ct_uGk1rkSdccPKXLzS259vdrJGTWAY9sfgVYspv6QYomxvWZWBM",
       "low_token_count" : 100.00,
-      "low_ae_count"    : 1
+      "low_ae_count"    : 1.0
     }
   ]
 }

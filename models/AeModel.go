@@ -37,7 +37,7 @@ var IsCheckIng bool = false
 //var CompilerUrl = "https://compiler.aeasy.io"
 //ct_VxetjnAkrWpCHkqkGJuda8W5Ni6ireEXPHJpACv82gLWySp5e
 var ABCLockContractV3 = "ct_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD"
-var BoxSwapContractV2 = "ct_2cVaV8rYvQ4pB9hrBRv1Y59YCbCGgXSLojRh7eGFbBsMekigCo"
+var BoxSwapContractV2 = "ct_2meHkLcAoZPrQj7P5WjFyJJRLJqRtv43z1QEbpcS1gHs9W8Q3g"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户

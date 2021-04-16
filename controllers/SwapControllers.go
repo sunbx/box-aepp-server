@@ -30,21 +30,24 @@ type SwapAccount struct {
 	AeCount    string  `json:"ae_count"`
 	TokenCount string  `json:"token_count"`
 	Token      string  `json:"token"`
-	Rate       string `json:"rate"`
+	Rate       string  `json:"rate"`
+	LenRate    float64 `json:"-"`
 }
 
 type SwapAccountSlice []SwapAccount
 
 func (s SwapAccountSlice) Less(i, j int) bool {
-	oneAeCount, _ := strconv.ParseFloat(s[i].AeCount, 64)
-	oneTokenCount, _ := strconv.ParseFloat(s[i].TokenCount, 64)
-	oneRate := oneAeCount / oneTokenCount
-
-	twoAeCount, _ := strconv.ParseFloat(s[j].AeCount, 64)
-	twoTokenCount, _ := strconv.ParseFloat(s[j].TokenCount, 64)
-
-	twoRate := twoTokenCount / twoAeCount
-	return oneRate > twoRate
+	//oneAeCount, _ := strconv.ParseFloat(s[i].AeCount, 64)
+	//oneTokenCount, _ := strconv.ParseFloat(s[i].TokenCount, 64)
+	//oneRate := oneAeCount / oneTokenCount
+	//
+	//twoAeCount, _ := strconv.ParseFloat(s[j].AeCount, 64)
+	//twoTokenCount, _ := strconv.ParseFloat(s[j].TokenCount, 64)
+	//
+	//twoRate := twoTokenCount / twoAeCount
+	//return oneRate > twoRate
+	//println(s[i].LenRate)
+	return s[j].LenRate > s[i].LenRate
 }
 
 func (s SwapAccountSlice) Len() int { return len(s) }
@@ -86,9 +89,10 @@ func (c *SwapCoinAccountController) Post() {
 
 			tokenCount, _ := account["token_count"].(json.Number).Float64()
 			item.TokenCount = utils.FormatTokens(tokenCount, 2)
-			if aeCount/tokenCount>1 {
+			item.LenRate = aeCount / tokenCount
+			if aeCount/tokenCount > 1 {
 				item.Rate = strconv.FormatFloat(aeCount/tokenCount, 'f', 2, 64)
-			}else{
+			} else {
 				item.Rate = strconv.FormatFloat(aeCount/tokenCount, 'f', 4, 64)
 			}
 
@@ -130,16 +134,21 @@ func (c *SwapCoinAccountMyController) Post() {
 
 			item.TokenCount = utils.FormatTokens(tokenCount, 2)
 
-			if aeCount/tokenCount>1 {
+			if aeCount/tokenCount > 1 {
 				item.Rate = strconv.FormatFloat(aeCount/tokenCount, 'f', 2, 64)
-			}else{
+			} else {
 				item.Rate = strconv.FormatFloat(aeCount/tokenCount, 'f', 4, 64)
 			}
 			item.Token = account["token"].(string)
 			coinAccountMap = append(coinAccountMap, item)
 		}
 		sort.Sort(SwapAccountSlice(coinAccountMap))
-		c.SuccessJson(coinAccountMap)
+		if len(coinAccountMap) >= 100 {
+			c.SuccessJson(coinAccountMap[:10])
+		} else {
+			c.SuccessJson(coinAccountMap)
+		}
+
 		return
 	}
 
