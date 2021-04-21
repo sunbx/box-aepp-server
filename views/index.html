@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" type="image/x-icon" href="../static/img/favicon.ico"/>
+    <title>Box aepp | Open up infinite possibilities</title>
+</head>
+
+<style>
+    /* User Defined Font */
+    @font-face {
+        font-family: 'myfont';
+        src: url("../static/fonts/Ubuntu-Regular.ttf");
+    }
+    @font-face {
+        font-family: 'myfont-bold';
+        src: url("../static/fonts/Ubuntu-Bold.ttf");
+        font-weight: bold;
+    }
+
+
+
+    body, ul, li, h1, h2, h3, h4, h5, h6, p, form, dl, dt, dd {
+        margin: 0px;
+        padding: 0px;
+        font-size: 12px;
+        font-weight: normal;
+        position: relative;
+    }
+
+    ul {
+        list-style: none;
+    }
+
+    img {
+        border-style: none;
+    }
+
+    body, html {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        padding: 0;
+    }
+
+    body {
+        display: flex;
+        align-items: center; /*定义body的元素垂直居中*/
+        justify-content: center; /*定义body的里的元素水平居中*/
+    }
+
+    .content {
+        width: 1200px;
+        background-size: 100% 100%;
+        height: 800px;
+        margin: 0 auto;
+        position: relative;
+        padding-left: 100px;
+        /*background-image: url("../static/img/bg_card.png");*/
+    }
+
+    .logo {
+        width: 162px;
+        height: 44px;
+        margin-top: 50px;
+    }
+
+    .title {
+
+        font-size: 54px;
+        color: #250913;
+        line-height: 74px;
+        font-family: 'myfont-bold';
+        font-weight: bold;
+    }
+
+    .title-animation {
+        font-family: 'Microsoft YaHei';
+        font-size: 54px;
+        color: #250913;
+        line-height: 74px;
+        font-weight: bold;
+        font-family: 'myfont-bold';
+        border-right: .1em solid;
+        width: 350px;
+        /* fallback */
+        /*width:30ch;*/
+        /* # of chars */
+        /*margin:2em 1em;*/
+        white-space: nowrap;
+        overflow: hidden;
+        animation: typing 2s steps(30, end), /* # of steps = # of chars */ blink-caret .5s step-end infinite alternate;
+    }
+
+    @keyframes typing {
+        from {
+            width: 0;
+        }
+    }
+
+    @keyframes blink-caret {
+        50% {
+            border-color: transparent;
+        }
+    }
+
+    .con {
+        opacity: 0.7;
+        font-size: 20px;
+        width: 460px;
+        color: #250913;
+        letter-spacing: 0;
+        margin-top: 20px;
+        font-family: 'myfont';
+
+        line-height: 40px;
+    }
+
+    .button {
+        width: 150px;
+        height: 45px;
+        background-image: linear-gradient(116deg, #000000 0%, #000000 90%);
+        border-radius: 23px;
+        line-height: 45px;
+        color: white;
+        font-size: 16px;
+        letter-spacing: 1.2px;
+        text-align: center;
+        text-decoration: none;
+        float: left;
+        font-family: 'myfont';
+        display: block;
+        box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .button2 {
+        width: 150px;
+        height: 45px;
+        background-image: linear-gradient(116deg, #00C4A7 0%, #00C4A7 90%);
+        border-radius: 23px;
+        line-height: 45px;
+        color: white;
+        font-family: 'myfont';
+        font-size: 16px;
+        background-repeat: no-repeat;
+        letter-spacing: 1.2px;
+        margin-left: 30px;
+        text-align: center;
+        text-decoration: none;
+        float: left;
+        display: block;
+        box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .pic {
+        width: 730px;
+        height: 817px;
+        background: url("https://aebox.oss-cn-hongkong.aliyuncs.com/img/pic.png");
+        right: 0;
+        margin-top: -358px;
+        align-items: center; /*定义body的元素垂直居中*/
+        top: 50%;
+        justify-content: center; /*定义body的里的元素水平居中*/
+        position: absolute;
+        background-size: 100% 100%;
+    }
+
+    .bg {
+        width: 100%;
+        height: 100%;
+        background: url("https://aebox.oss-cn-hongkong.aliyuncs.com/img/bg.png");
+        position: absolute;
+        background-size: 100% 100%;
+    }
+
+</style>
+<body>
+
+<div class="bg"></div>
+<div id="content" class="content">
+    <div class="pic"></div>
+    <div class="item">
+        <div>
+            <img src="../static/img/logo.png" alt="" class="logo">
+        </div>
+        <div style="height: 80px;"></div>
+        <p class="title">Infinite possibility </p>
+        <p class="title">box opens aeternal </p>
+        <p class="title-animation">block world </p>
+        <p class="con">The functions in the box include basic wallet, Aens system, games, smart contract, instant
+            messaging, data link, and so on. It is a decentralized aepp</p>
+
+        <div style="height: 50px;"></div>
+        <div class="buttons">
+            <a class="button" href="javascript:download_iOS();">
+                <img>
+                <span>iOS</span>
+            </a>
+            <a class="button2" href="javascript:download_Android();">
+                <span>Android</span>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+<script type="text/javascript">
+    autodivheight();
+    function autodivheight(){ //函数：获取尺寸
+        //获取浏览器窗口高度
+        var winHeight=0;
+        if (window.innerHeight){
+            winHeight = window.innerHeight;
+        }
+        else if ((document.body) && (document.body.clientHeight)){
+            winHeight = document.body.clientHeight;
+        }
+        //通过深入Document内部对body进行检测，获取浏览器窗口高度
+        if (document.documentElement && document.documentElement.clientHeight){
+            winHeight = document.documentElement.clientHeight;
+        }
+        //DIV高度为浏览器窗口的高度
+        //document.getElementById("test").style.height= winHeight +"px";
+        //DIV高度为浏览器窗口高度的一半
+        console.log(winHeight);
+        if(winHeight>840){
+            document.getElementById("content").style.backgroundImage='url(https://aebox.oss-cn-hongkong.aliyuncs.com/img/bg_card.png)';
+        }else{
+            document.getElementById("content").style.backgroundImage='';
+        }
+
+    }
+    window.onresize=autodivheight; //浏览器窗口发生变化时同时变化DIV高度
+
+
+
+    function download_iOS() {
+        window.location.href = "https://testflight.apple.com/join/iVgCHJCc";
+    }
+    function download_Android() {
+        window.location.href = "https://boxaepp.oss-cn-hangzhou.aliyuncs.com/com.aepp.box_release_v2.1.0_20210328190139.apk";
+    }
+</script>
+
+</html>
