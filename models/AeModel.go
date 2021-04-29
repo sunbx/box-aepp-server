@@ -26,6 +26,9 @@ var NodeUrl = "https://node.aeasy.io"
 var NodeUrlDebug = "https://debug.aeasy.io"
 var CompilerUrl = "https://compiler.aeasy.io"
 
+var TESTTNodeUrl = "https://testnet.aeternity.io"
+var TESTUrlDebug = "https://testnet.aeternity.io"
+
 
 var LastHeight = 0
 var LockAccountSize = 0
@@ -38,6 +41,7 @@ var IsCheckIng bool = false
 //ct_VxetjnAkrWpCHkqkGJuda8W5Ni6ireEXPHJpACv82gLWySp5e
 var ABCLockContractV3 = "ct_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD"
 var BoxSwapContractV2 = "ct_2meHkLcAoZPrQj7P5WjFyJJRLJqRtv43z1QEbpcS1gHs9W8Q3g"
+var OraclesContractV1 = "ct_na6srtdiQ5kEB7nuPieHfzS975fcboaGdeegFEtkBiWaMvY8T"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -220,13 +224,29 @@ var callCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":"
 
 //获取合约数据try-run
 func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
-	node := naet.NewNode(NodeUrl, false)
-	compile := naet.NewCompiler(CompilerUrl, false)
+
+	var nodeUrl =""
+	var compilerUrl =""
+	var nodeUrlDebug =""
+	if ctID != OraclesContractV1{
+		nodeUrl = NodeUrl
+		compilerUrl = CompilerUrl
+		nodeUrlDebug = NodeUrlDebug
+	}else{
+		nodeUrl = TESTTNodeUrl
+		compilerUrl = CompilerUrl
+		nodeUrlDebug = TESTUrlDebug
+	}
+
+	node := naet.NewNode(nodeUrl, false)
+	compile := naet.NewCompiler(compilerUrl, false)
 	var source []byte
 	if ctID == ABCLockContractV3 {
 		source, _ = ioutil.ReadFile("contract/ABCLockContractV3.aes")
 	}else if ctID == BoxSwapContractV2 {
 		source, _ = ioutil.ReadFile("contract/BoxSwapContractV2.aes")
+	}else if ctID == OraclesContractV1 {
+		source, _ = ioutil.ReadFile("contract/OraclesLottery.aes")
 	} else {
 		source, _ = ioutil.ReadFile("contract/AEX9Contract.aes")
 	}
@@ -261,7 +281,7 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 
 	body := "{\"accounts\":[{\"pub_key\":\"" + address + "\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\"" + txStr + "\"}]}"
 
-	response := utils.PostBody(NodeUrlDebug+"/v2/debug/transactions/dry-run", body, "application/json")
+	response := utils.PostBody(nodeUrlDebug+"/v2/debug/transactions/dry-run", body, "application/json")
 	var tryRun TryRun
 	err = json.Unmarshal([]byte(response), &tryRun)
 	if err != nil {
