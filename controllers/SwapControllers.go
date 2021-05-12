@@ -12,6 +12,9 @@ import (
 type SwapCoinListController struct {
 	BaseController
 }
+type AppStoreListController struct {
+	BaseController
+}
 
 type SwapCoinAccountController struct {
 	BaseController
@@ -53,6 +56,11 @@ func (s SwapAccountSlice) Less(i, j int) bool {
 func (s SwapAccountSlice) Len() int { return len(s) }
 
 func (s SwapAccountSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+func (c *AppStoreListController) Post() {
+	source, _ := ioutil.ReadFile("conf/appstore.json")
+	c.Ctx.WriteString(string(source))
+}
 
 func (c *SwapCoinListController) Post() {
 	source, _ := ioutil.ReadFile("conf/swap.json")
@@ -100,7 +108,12 @@ func (c *SwapCoinAccountController) Post() {
 			coinAccountMap = append(coinAccountMap, item)
 		}
 		sort.Sort(SwapAccountSlice(coinAccountMap))
-		c.SuccessJson(coinAccountMap)
+		print(len(coinAccountMap))
+		if len(coinAccountMap) >= 10 {
+			c.SuccessJson(coinAccountMap[:10])
+		} else {
+			c.SuccessJson(coinAccountMap)
+		}
 		return
 	}
 
@@ -143,11 +156,7 @@ func (c *SwapCoinAccountMyController) Post() {
 			coinAccountMap = append(coinAccountMap, item)
 		}
 		sort.Sort(SwapAccountSlice(coinAccountMap))
-		if len(coinAccountMap) >= 100 {
-			c.SuccessJson(coinAccountMap[:10])
-		} else {
-			c.SuccessJson(coinAccountMap)
-		}
+		c.SuccessJson(coinAccountMap)
 
 		return
 	}

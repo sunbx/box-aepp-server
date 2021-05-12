@@ -63,7 +63,6 @@ func (c *ApiContractBalanceController) Post() {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
-
 	switch result.(type) { //这里是通过i.(type)来判断是什么类型  下面的case分支匹配到了 则执行相关的分支
 	case string:
 		c.SuccessJson(map[string]interface{}{"balance": "0.00000"})

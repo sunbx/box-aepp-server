@@ -41,7 +41,7 @@ var IsCheckIng bool = false
 //ct_VxetjnAkrWpCHkqkGJuda8W5Ni6ireEXPHJpACv82gLWySp5e
 var ABCLockContractV3 = "ct_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD"
 var BoxSwapContractV2 = "ct_2meHkLcAoZPrQj7P5WjFyJJRLJqRtv43z1QEbpcS1gHs9W8Q3g"
-var OraclesContractV1 = "ct_na6srtdiQ5kEB7nuPieHfzS975fcboaGdeegFEtkBiWaMvY8T"
+var OraclesContractV1 = "ct_22mvCVphg3ipN856sANq27zDkFt4tAUzeCB1w8PLrM8xoBNGvM"
 
 //var nodeURL = nodeURL
 //根据助记词返回用户
@@ -220,7 +220,7 @@ func CallContractFunction(account *account.Account, ctID string, function string
 //存放解析结果的缓存
 //var cacheResultMap = make(map[string]interface{})
 
-var callCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"12000"}`)
+var callCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"1","EmbedExpiry":"12000"}`)
 
 //获取合约数据try-run
 func CallStaticContractFunction(address string, ctID string, function string, args []string) (s interface{}, functionEncode string, e error) {
@@ -233,9 +233,12 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 		compilerUrl = CompilerUrl
 		nodeUrlDebug = NodeUrlDebug
 	}else{
-		nodeUrl = TESTTNodeUrl
+		//nodeUrl = TESTTNodeUrl
+		//compilerUrl = CompilerUrl
+		//nodeUrlDebug = TESTUrlDebug
+		nodeUrl = NodeUrl
 		compilerUrl = CompilerUrl
-		nodeUrlDebug = TESTUrlDebug
+		nodeUrlDebug = NodeUrlDebug
 	}
 
 	node := naet.NewNode(nodeUrl, false)
@@ -302,7 +305,7 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	return decodeResult, function, err
 }
 
-var tokenCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"2","EmbedExpiry":"12000"}`)
+var tokenCache, _ = cache.NewCache("file", `{"CachePath":"./cache","FileSuffix":".cache","DirectoryLevel":"1","EmbedExpiry":"12000"}`)
 
 //获取代币余额调用
 func TokenBalanceFunction(address string, ctID string, t string, function string, args []string) (s interface{}, functionEncode string, e error) {

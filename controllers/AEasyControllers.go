@@ -333,9 +333,9 @@ func (c *ApiUserInfoController) Post() {
 	if err != nil {
 		print(err.Error())
 		if err.Error() == "Error: Account not found" {
-			account, _ := models.SigningKeyHexStringAccount(beego.AppConfig.String("AEASY::accountFoundation"))
-			tx, _ := models.ApiSpend(account, address, 0.001, "Sponsored by China Foundation（中国基金会赞助）")
-			print(tx.Hash)
+			//account, _ := models.SigningKeyHexStringAccount(beego.AppConfig.String("AEASY::accountFoundation"))
+			//tx, _ := models.ApiSpend(account, address, 0.00001, "Sponsored by China Foundation（中国基金会赞助）")
+			//print(tx.Hash)
 
 		}
 	}
