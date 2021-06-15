@@ -108,6 +108,7 @@ func (c *SwapCoinAccountController) Post() {
 			coinAccountMap = append(coinAccountMap, item)
 		}
 		sort.Sort(SwapAccountSlice(coinAccountMap))
+		coinSwapPriceRate[ctId] = coinAccountMap[0].Rate
 		print(len(coinAccountMap))
 		if len(coinAccountMap) >= 10 {
 			c.SuccessJson(coinAccountMap[:10])
@@ -119,6 +120,7 @@ func (c *SwapCoinAccountController) Post() {
 
 	c.SuccessJson(contractResult)
 }
+var coinSwapPriceRate = make(map[string]string)
 
 func (c *SwapCoinAccountMyController) Post() {
 	address := c.GetString("address")
@@ -152,6 +154,7 @@ func (c *SwapCoinAccountMyController) Post() {
 			} else {
 				item.Rate = strconv.FormatFloat(aeCount/tokenCount, 'f', 4, 64)
 			}
+
 			item.Token = account["token"].(string)
 			coinAccountMap = append(coinAccountMap, item)
 		}
