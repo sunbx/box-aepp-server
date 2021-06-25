@@ -24,7 +24,8 @@ import (
 
 var NodeUrl = "https://node.aeasy.io"
 var NodeUrlDebug = "https://debug.aeasy.io"
-var CompilerUrl = "https://compiler.aeasy.io"
+var CompilerUrl = "https://latest.compiler.aepps.com"
+//var CompilerUrl = "https://compiler.aeasy.io"
 
 var TESTTNodeUrl = "https://testnet.aeternity.io"
 var TESTUrlDebug = "https://testnet.aeternity.io"
@@ -187,7 +188,7 @@ func CallContractFunction(account *account.Account, ctID string, function string
 		source, _ = ioutil.ReadFile("contract/AEX9Contract.aes")
 	}
 	//调用合约代码
-	callReceipt, err := contract.Call(ctID, string(source), function, args, config.CompilerBackendFATE)
+	callReceipt, err := contract.Call(ctID, string(source), function, args)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +210,7 @@ func CallContractFunction(account *account.Account, ctID string, function string
 		return nil, err
 	}
 	//解析结果
-	decodeResult, err := c.DecodeCallResult(callInfoResult.CallInfo.ReturnType, callInfoResult.CallInfo.ReturnValue, function, string(source), config.Compiler.Backend)
+	decodeResult, err := c.DecodeCallResult(callInfoResult.CallInfo.ReturnType, callInfoResult.CallInfo.ReturnValue, function, string(source))
 	if err != nil {
 		return nil, err
 	}
@@ -227,18 +228,18 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 
 	var nodeUrl =""
 	var compilerUrl =""
-	var nodeUrlDebug =""
+	//var nodeUrlDebug =""
 	if ctID != OraclesContractV1{
 		nodeUrl = NodeUrl
 		compilerUrl = CompilerUrl
-		nodeUrlDebug = NodeUrlDebug
+		//nodeUrlDebug = NodeUrlDebug
 	}else{
 		//nodeUrl = TESTTNodeUrl
 		//compilerUrl = CompilerUrl
 		//nodeUrlDebug = TESTUrlDebug
 		nodeUrl = NodeUrl
 		compilerUrl = CompilerUrl
-		nodeUrlDebug = NodeUrlDebug
+		//nodeUrlDebug = NodeUrlDebug
 	}
 
 	node := naet.NewNode(nodeUrl, false)
@@ -260,7 +261,7 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	if callCache.IsExist(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))) {
 		callData = callCache.Get(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))).(string)
 	} else {
-		data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		data, err := compile.EncodeCalldata(string(source), function, args)
 		if err != nil {
 			return nil, function, err
 		}
@@ -268,14 +269,16 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 		_ = callCache.Put(utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args)), callData, 1000*time.Hour)
 	}
 
-	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0), config.Client.Contracts.GasLimit, config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
+
+	callTx, err := transactions.NewContractCallTx(address, ctID, big.NewInt(0),  big.NewInt(10000000000),config.Client.GasPrice, config.Client.Contracts.ABIVersion, callData, transactions.NewTTLNoncer(node))
 	if err != nil {
+
 		return nil, function, err
 	}
-
 	w := &bytes.Buffer{}
 	err = callTx.EncodeRLP(w)
 	if err != nil {
+
 		println(callTx.CallData)
 		return nil, function, err
 	}
@@ -284,10 +287,13 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 
 	body := "{\"accounts\":[{\"pub_key\":\"" + address + "\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\"" + txStr + "\"}]}"
 
-	response := utils.PostBody(nodeUrlDebug+"/v2/debug/transactions/dry-run", body, "application/json")
+
+	//response := utils.PostBody(nodeUrlDebug+"/v2/debug/transactions/dry-run", body, "application/json")
+	response := utils.PostBody(NodeUrl+"/v3/dry-run", body, "application/json")
 	var tryRun TryRun
 	err = json.Unmarshal([]byte(response), &tryRun)
 	if err != nil {
+
 		return nil, function, err
 	}
 
@@ -295,12 +301,12 @@ func CallStaticContractFunction(address string, ctID string, function string, ar
 	//if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
 	//	return v, function, err
 	//} else {
-	//	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	//	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source))
 	//	cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
 	//	return decodeResult, function, err
 	//}
 
-	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source))
 	//cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
 	return decodeResult, function, err
 }
@@ -323,7 +329,7 @@ func TokenBalanceFunction(address string, ctID string, t string, function string
 	if tokenCache.IsExist(utils.Md5V(function + "#" + address + "#" + ctID + "#" + fmt.Sprintf("%s", args))) {
 		callData = tokenCache.Get(utils.Md5V(function + "#" + address + "#" + ctID + "#" + fmt.Sprintf("%s", args))).(string)
 	} else {
-		data, err := compile.EncodeCalldata(string(source), function, args, config.CompilerBackendFATE)
+		data, err := compile.EncodeCalldata(string(source), function, args)
 		if err != nil {
 			return nil, function, err
 		}
@@ -347,7 +353,7 @@ func TokenBalanceFunction(address string, ctID string, t string, function string
 
 	body := "{\"accounts\":[{\"pub_key\":\"" + address + "\",\"amount\":100000000000000000000000000000000000}],\"txs\":[{\"tx\":\"" + txStr + "\"}]}"
 
-	response := utils.PostBody(NodeUrlDebug+"/v2/debug/transactions/dry-run", body, "application/json")
+	response := utils.PostBody(NodeUrl+"/v3/dry-run", body, "application/json")
 	var tryRun TryRun
 	err = json.Unmarshal([]byte(response), &tryRun)
 	if err != nil {
@@ -357,11 +363,11 @@ func TokenBalanceFunction(address string, ctID string, t string, function string
 	//if v, ok := cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue]; ok {
 	//	return v, function, err
 	//} else {
-	//	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	//	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source))
 	//	cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
 	//	return decodeResult, function, err
 	//}
-	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source), config.Compiler.Backend)
+	decodeResult, err := compile.DecodeCallResult(tryRun.Results[0].CallObj.ReturnType, tryRun.Results[0].CallObj.ReturnValue, function, string(source))
 	//cacheResultMap[utils.Md5V(function+"#"+address+"#"+ctID+"#"+fmt.Sprintf("%s", args))+"#"+tryRun.Results[0].CallObj.ReturnValue] = decodeResult
 	return decodeResult, function, err
 

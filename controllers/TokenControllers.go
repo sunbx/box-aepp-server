@@ -65,9 +65,20 @@ func (c *TokenListController) Post() {
 func (c *ApiContractBalanceController) Post() {
 	ctId := c.GetString("ct_id")
 	address := c.GetString("address")
+
+	_, err := models.ApiGetAccount(address)
+	if err != nil {
+		if "Account not found" == err.Error() {
+			c.SuccessJson(map[string]interface{}{"balance": "0.00000", "rate": "0"})
+			return
+		}
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
 	result, _, err := models.CallStaticContractFunction(address, ctId, "balance", []string{address})
 	if err != nil {
-		if "Error: Account not found" == err.Error() {
+		if "Account not found" == err.Error() {
 			c.SuccessJson(map[string]interface{}{"balance": "0.00000", "rate": "0"})
 			return
 		}

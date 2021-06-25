@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -61,12 +62,14 @@ func PostBody(url string, data string, contentType string) (content string) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
 	req.Header.Add("content-type", contentType)
 	if err != nil {
+		fmt.Println(err.Error())
 		return ""
 	}
 	defer req.Body.Close()
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, error := client.Do(req)
 	if error != nil {
+		fmt.Println(error.Error())
 		return ""
 	}
 	defer resp.Body.Close()

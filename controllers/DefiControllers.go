@@ -122,10 +122,11 @@ func (c *ApiContractRankingController) Post() {
 
 	myResult, _, err := models.CallStaticContractFunction("ak_2uQYkMmupmAvBtSGtVLyua4EmcPAY62gKo4bSFEmfCNeNK9THX", ctId, "balances", []string{})
 	if err != nil {
-		if "Error: Account not found" == err.Error() {
+		if "Account not found" == err.Error() {
 			c.SuccessJson([]JsonData{})
 			return
 		}
+		c.ErrorJson(-500, "123123", myResult)
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
 	}
@@ -165,13 +166,14 @@ func (c *ApiContractRankingController) Post() {
 		}
 
 	}
+
 }
 
 func (c *ApiContractInfoController) Post() {
 	address := c.GetString("address")
 	result, _, err := models.CallStaticContractFunction(address, models.ABCLockContractV3, "get_data_info", []string{address})
 	if err != nil {
-		if "Error: Account not found" == err.Error() {
+		if "Account not found" == err.Error() {
 			c.SuccessJson(map[string]interface{}{
 				"account":      address,
 				"after_height": -1,
