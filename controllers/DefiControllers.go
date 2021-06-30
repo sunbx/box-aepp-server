@@ -193,12 +193,25 @@ func (c *ApiContractInfoController) Post() {
 		data := result.(map[string]interface{})
 		account := data["account"].(string)
 		count, _ := data["count"].(json.Number).Float64()
+
+		height := data["height"].(json.Number)
+		afterHeight,_ := data["after_height"].(json.Number).Float64()
+		minHeight := data["min_height"].(json.Number)
+
+
 		countFormat := utils.FormatTokens(count, 2)
 		if countFormat == "0" {
 			countFormat = "0.00"
 		}
 
 		token, _ := data["token"].(json.Number).Float64()
+
+		if afterHeight>480{
+			afterHeight = 480
+		}
+
+
+		token = (afterHeight * 42000000000/1000000000000000000) * count
 		tokenFormat := utils.FormatTokens(token, 7)
 		if tokenFormat == "0" {
 			tokenFormat = "0.0000000"
@@ -211,9 +224,6 @@ func (c *ApiContractInfoController) Post() {
 			allCountFormat = "0"
 		}
 
-		height := data["height"].(json.Number)
-		afterHeight := data["after_height"].(json.Number)
-		minHeight := data["min_height"].(json.Number)
 		c.SuccessJson(map[string]interface{}{
 			"account":      account,
 			"count":        countFormat,

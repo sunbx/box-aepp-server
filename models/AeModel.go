@@ -24,7 +24,7 @@ import (
 
 var NodeUrl = "https://node.aeasy.io"
 var NodeUrlDebug = "https://debug.aeasy.io"
-var CompilerUrl = "https://latest.compiler.aepps.com"
+var CompilerUrl = "https://compiler.aeasy.io"
 //var CompilerUrl = "https://compiler.aeasy.io"
 
 var TESTTNodeUrl = "https://testnet.aeternity.io"
@@ -40,7 +40,7 @@ var IsCheckIng bool = false
 //var NodeUrlDebug = "https://testnet.aeternity.io"
 //var CompilerUrl = "https://compiler.aeasy.io"
 //ct_VxetjnAkrWpCHkqkGJuda8W5Ni6ireEXPHJpACv82gLWySp5e
-var ABCLockContractV3 = "ct_nZpU3hfmAfe4g6jiTPPcwa21hnQL68SEYvtizV3iEcfsSHCfD"
+var ABCLockContractV3 = "ct_y7gojSY8rXW6tztE9Ftqe3kmNrqEXsREiPwGCeG3MJL38jkFo"
 var BoxSwapContractV2 = "ct_2meHkLcAoZPrQj7P5WjFyJJRLJqRtv43z1QEbpcS1gHs9W8Q3g"
 var OraclesContractV1 = "ct_22mvCVphg3ipN856sANq27zDkFt4tAUzeCB1w8PLrM8xoBNGvM"
 
