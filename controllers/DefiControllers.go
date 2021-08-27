@@ -206,12 +206,12 @@ func (c *ApiContractInfoController) Post() {
 
 		token, _ := data["token"].(json.Number).Float64()
 
-		if afterHeight>480{
-			afterHeight = 480
+		if afterHeight>960{
+			afterHeight = 961
 		}
 
 
-		token = (afterHeight * 42000000000/1000000000000000000) * count
+		token = (afterHeight * 21000000000/1000000000000000000) * count
 		tokenFormat := utils.FormatTokens(token, 7)
 		if tokenFormat == "0" {
 			tokenFormat = "0.0000000"

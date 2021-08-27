@@ -64,10 +64,10 @@ type TESTController struct {
 	BaseController
 }
 
-var HOST = "https://aeasy.io"
+var AeHost = "https://aeasy.io"
 
 func (c *BlockTopController) Post() {
-	resp, err := http.PostForm(HOST+"/api/ae/block_top",
+	resp, err := http.PostForm(AeHost+"/api/ae/block_top",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 		})
@@ -104,7 +104,7 @@ func (c *TESTController) Get() {
 }
 
 func (c *NamesBaseController) Post() {
-	resp, err := http.PostForm(HOST+"/api/names/base",
+	resp, err := http.PostForm(AeHost+"/api/names/base",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 		})
@@ -126,7 +126,7 @@ func (c *TokenRecordController) Post() {
 	address := c.GetString("address")
 	ctId := c.GetString("ct_id")
 	page := c.GetString("page")
-	resp, err := http.PostForm(HOST+"/api/aex9/record",
+	resp, err := http.PostForm(AeHost+"/api/aex9/record",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
 			"address": {address},
@@ -162,7 +162,7 @@ func (c *ServerController) Get() {
 }
 
 func (c *ApiBaseDataController) Post() {
-	resp, err := http.PostForm(HOST+"/api/base/data",
+	resp, err := http.PostForm(AeHost+"/api/base/data",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 		})
@@ -183,7 +183,7 @@ func (c *ApiBaseDataController) Post() {
 func (c *ApiWalletTransferRecordController) Post() {
 	address := c.GetString("address")
 	page := c.GetString("page")
-	resp, err := http.PostForm(HOST+"/api/wallet/transfer/record",
+	resp, err := http.PostForm(AeHost+"/api/wallet/transfer/record",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
 			"address": {address},
@@ -205,7 +205,7 @@ func (c *ApiWalletTransferRecordController) Post() {
 
 func (c *ApiNamesAuctionsController) Post() {
 	page := c.GetString("page")
-	resp, err := http.PostForm(HOST+"/api/names/auctions",
+	resp, err := http.PostForm(AeHost+"/api/names/auctions",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 			"page":   {page},
@@ -226,7 +226,7 @@ func (c *ApiNamesAuctionsController) Post() {
 
 func (c *ApiNamesPriceController) Post() {
 	page := c.GetString("page")
-	resp, err := http.PostForm(HOST+"/api/names/price",
+	resp, err := http.PostForm(AeHost+"/api/names/price",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 			"page":   {page},
@@ -247,7 +247,7 @@ func (c *ApiNamesPriceController) Post() {
 
 func (c *ApiNamesOverController) Post() {
 	page := c.GetString("page")
-	resp, err := http.PostForm(HOST+"/api/names/over",
+	resp, err := http.PostForm(AeHost+"/api/names/over",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 			"page":   {page},
@@ -272,7 +272,7 @@ func (c *ApiNamesMyRegisterController) Post() {
 
 	print("address:", address)
 	print("page:", page)
-	resp, err := http.PostForm(HOST+"/api/names/my/register",
+	resp, err := http.PostForm(AeHost+"/api/names/my/register",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
 			"page":    {page},
@@ -295,7 +295,7 @@ func (c *ApiNamesMyRegisterController) Post() {
 func (c *ApiNamesMyOverController) Post() {
 	page := c.GetString("page")
 	address := c.GetString("address")
-	resp, err := http.PostForm(HOST+"/api/names/my/over",
+	resp, err := http.PostForm(AeHost+"/api/names/my/over",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
 			"page":    {page},
@@ -317,7 +317,7 @@ func (c *ApiNamesMyOverController) Post() {
 
 func (c *ApiNamesInfoController) Post() {
 	name := c.GetString("name")
-	resp, err := http.PostForm(HOST+"/api/names/info",
+	resp, err := http.PostForm(AeHost+"/api/names/info",
 		url.Values{
 			"app_id": {beego.AppConfig.String("AEASY::appId")},
 			"name":   {name},
@@ -338,7 +338,7 @@ func (c *ApiNamesInfoController) Post() {
 
 func (c *ApiUserInfoController) Post() {
 	address := c.GetString("address")
-	resp, err := http.PostForm(HOST+"/api/user/info",
+	resp, err := http.PostForm(AeHost+"/api/user/info",
 		url.Values{
 			"app_id":  {beego.AppConfig.String("AEASY::appId")},
 			"address": {address},
