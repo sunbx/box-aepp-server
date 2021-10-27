@@ -22,6 +22,10 @@ type ApiCfxCrc20TransactionHashController struct {
 	BaseController
 }
 
+type ApiCfxNFTBalanceController struct {
+	BaseController
+}
+
 var CfxHost = "https://confluxscan.io/v1"
 
 func (c *ApiCfxBalanceController) Post() {
@@ -120,6 +124,25 @@ func (c *ApiCfxCrc20TransactionHashController) Post() {
 		return
 	}
 
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+
+func (c *ApiCfxNFTBalanceController) Post() {
+	address := c.GetString("address")
+	var resp *http.Response
+	var err error
+	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/balance?ownerAddress=" + address)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

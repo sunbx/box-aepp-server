@@ -4,8 +4,10 @@
   "time": "-1",
   "data": {
     "is_mandatory": "0",
-    "url_android": "https://boxaepp.oss-cn-hangzhou.aliyuncs.com/com.aepp.box_release_v1.0.1_20200930133559.apk",
-    "url_ios": "https://testflight.apple.com/join/iVgCHJCc",
+    "url_android": "https://boxaepp.oss-cn-hangzhou.aliyuncs.com/com.aepp.box_release_v3.0.1_20210923150555.apk",
+    "url_ios": "https://aebox.io",
+    "msg_cn": "修复已知问题",
+    "msg_en": "Fix known problems",
     "version": "1.0.1",
     "version_ios": "1.0.1"
   }
