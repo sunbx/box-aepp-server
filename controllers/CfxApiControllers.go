@@ -25,6 +25,12 @@ type ApiCfxCrc20TransactionHashController struct {
 type ApiCfxNFTBalanceController struct {
 	BaseController
 }
+type ApiCfxNFTTokenController struct {
+	BaseController
+}
+type ApiCfxNFTPreviewController struct {
+	BaseController
+}
 
 var CfxHost = "https://confluxscan.io/v1"
 
@@ -152,3 +158,45 @@ func (c *ApiCfxNFTBalanceController) Post() {
 	c.Ctx.WriteString(string(body))
 
 }
+
+func (c *ApiCfxNFTTokenController) Post() {
+	address := c.GetString("address")
+	contract := c.GetString("contract")
+	var resp *http.Response
+	var err error
+	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/token?contractAddress="+contract+"&limit=12&ownerAddress="+address+"&skip=0")
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+
+func (c *ApiCfxNFTPreviewController) Post() {
+	tokenId := c.GetString("tokenId")
+	contract := c.GetString("contract")
+	var resp *http.Response
+	var err error
+	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/preview?contractAddress="+contract+"&tokenId="+tokenId)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+
+

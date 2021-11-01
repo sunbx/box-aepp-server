@@ -52,15 +52,12 @@
 
     .content {
         height: 100%;
-        width: 100%;
         background-image: url("https://aebox.oss-cn-hongkong.aliyuncs.com/img/bg_mobile.png");
         margin: 0 auto;
-        background-repeat: no-repeat;
         background-size: cover;
     }
 
     .logo {
-        width: 122px;
         margin-left: 15px;
         margin-top: 15px;
         height: 34px;
@@ -72,7 +69,7 @@
         font-family: 'myfont-bold';
         font-weight: bold;
         font-size: 24px;
-        margin-top: 50px;
+        margin-top: 20px;
         line-height: 30px;
         text-align: center;
         color: #250913;
@@ -100,6 +97,8 @@
         align-items: center; /*定义body的元素垂直居中*/
         justify-content: center; /*定义body的里的元素水平居中*/
         bottom: 0;
+        padding-top: 10px;
+        margin-bottom: 20px;
         /*background: #f7f5f5;*/
         backdrop-filter: blur(10px) brightness(110%);
         margin: 0 auto;
@@ -113,17 +112,12 @@
     .button {
         width: 120px;
         height: 45px;
-        background-image: linear-gradient(116deg, #000000 0%, #000000 90%);
-        border-radius: 23px;
         line-height: 45px;
         color: white;
         font-size: 16px;
-        margin-left: 30px;
-        letter-spacing: 1.2px;
         text-align: center;
         text-decoration: none;
         display: inline-block;
-        box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.1);
     }
 
     .button2 {
@@ -148,9 +142,9 @@
     }
 
     .pic {
-        height: 450px;
+        /*height: 550px;*/
         width: 350px;
-        background-image: url("https://aebox.oss-cn-hongkong.aliyuncs.com/img/pic_mobile.png");
+        background-image: url("https://aebox.oss-cn-hongkong.aliyuncs.com/img/pic_30.png");
         align-items: center; /*定义body的元素垂直居中*/
         justify-content: center; /*定义body的里的元素水平居中*/
         background-size: 100% 100%;
@@ -168,24 +162,36 @@
 
 <div class="bg"></div>
 <div class="content">
-    <div class="pic"></div>
+    <img  src="https://aebox.oss-cn-hongkong.aliyuncs.com/img/pic_30.png" class="pic"></img>
     <div>
         <div>
-            <img src="../static/img/logo.png" alt="" class="logo">
+            <img src="../static/img/logo_30.png" alt="" class="logo">
         </div>
 
         <div style="height: 400px;"></div>
-        <p class="title">Infinite possibility box opens aeternal block world </p>
-        <p class="con">The functions in the box include basic wallet, Aens system, games, smart contract, instant
-            messaging, data link, and so on. It is a decentralized aepp</p>
+        <p class="title">Infinite possibility box opens magic block world </p>
+        <p class="con">The functions in the box include basic wallet, AENS system, games, smart contract, instant
+            messaging, data link, and so on. It is a decentralized wallet</p>
 
         <div style="height: 50px;"></div>
 
         <div class="buttons footer">
 
-            <a class="button2" href="javascript:download();">
-                <span>Download</span>
+            <a id="android1" class="button" href="javascript:download();">
+                <img src="../static/img/apk-en.svg">
             </a>
+            <div id="android2" style="width: 30px"></div>
+            <a id="android3" class="button" href="javascript:download(true);">
+                <img src="../static/img/google-play.svg">
+            </a>
+
+
+
+            <a id="ios" class="button" href="javascript:download();">
+                <img src="../static/img/app-store.svg">
+            </a>
+
+
         </div>
         <div style="height: 100px;"></div>
 
@@ -194,7 +200,7 @@
 </div>
 
 <script>
-    function download() {
+    function download(isgoogle) {
         var ua = window.navigator.userAgent.toLowerCase();
         if (ua.match(/MicroMessenger/i) == 'micromessenger') {
             //在微信中打开需要的操作
@@ -207,7 +213,12 @@
             var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
             if (isAndroid === true) {
                 //跳转链接
-                window.location.href = "https://boxaepp.oss-cn-hangzhou.aliyuncs.com/com.aepp.box_release_v3.0.3_20210924150741.apk";
+                if(isgoogle){
+                    window.location.href = "https://play.google.com/store/apps/details?id=com.aepp.box";
+                }else{
+                    window.location.href = "https://boxaepp.oss-cn-hangzhou.aliyuncs.com/com.aepp.box_release_v3.0.3_20210924150741.apk";
+                }
+
 
             } else {
                 window.location.href = "https://apps.apple.com/us/app/box-aepp/id1563610905";
@@ -216,7 +227,18 @@
 
         }
     }
-
+    var u = navigator.userAgent;
+    console.log(navigator.userAgent.match())
+    var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
+    if (isAndroid === true) {
+        //跳转链接
+        document.getElementById("ios").style.display = "none"
+    } else {
+        // console.log("不是手机")
+        document.getElementById("android1").style.display = "none"
+        document.getElementById("android2").style.display = "none"
+        document.getElementById("android3").style.display = "none"
+    }
 
 </script>
 
