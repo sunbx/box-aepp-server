@@ -12,6 +12,12 @@ type ApiCfxBalanceController struct {
 type ApiCfxTokensController struct {
 	BaseController
 }
+type ApiCfxTokensListController struct {
+	BaseController
+}
+type ApiCfxTokensByAddressController struct {
+	BaseController
+}
 type ApiCfxTransactionController struct {
 	BaseController
 }
@@ -55,6 +61,38 @@ func (c *ApiCfxTokensController) Post() {
 
 	address := c.GetString("address")
 	resp, err := http.Get(CfxHost + "/token?fields=icon&transferType=ERC20&limit=100&accountAddress=" + address)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+
+}
+func (c *ApiCfxTokensListController) Post() {
+	resp, err := http.Get("https://confluxscan.io/stat/tokens/list?fields=transferCount&fields=iconUrl&fields=price&fields=totalPrice&fields=quoteUrl&fields=transactionCount&fields=erc20TransferCount&limit=9999&orderBy=totalPrice&reverse=true&skip=0&transferType=ERC20")
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.ErrorJson(-500, err.Error(), JsonData{})
+		return
+	}
+	c.Ctx.WriteString(string(body))
+}
+
+func (c *ApiCfxTokensByAddressController) Post() {
+	address := c.GetString("address")
+	resp, err := http.Get("https://confluxscan.io/stat/tokens/by-address?address=" + address + "&fields=iconUrl&fields=transferCount&fields=price&fields=totalPrice&fields=quoteUrl")
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -139,7 +177,6 @@ func (c *ApiCfxCrc20TransactionHashController) Post() {
 	c.Ctx.WriteString(string(body))
 }
 
-
 func (c *ApiCfxNFTBalanceController) Post() {
 	address := c.GetString("address")
 	var resp *http.Response
@@ -164,7 +201,7 @@ func (c *ApiCfxNFTTokenController) Post() {
 	contract := c.GetString("contract")
 	var resp *http.Response
 	var err error
-	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/token?contractAddress="+contract+"&limit=12&ownerAddress="+address+"&skip=0")
+	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/token?contractAddress=" + contract + "&limit=12&ownerAddress=" + address + "&skip=0")
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -177,14 +214,13 @@ func (c *ApiCfxNFTTokenController) Post() {
 	}
 	c.Ctx.WriteString(string(body))
 }
-
 
 func (c *ApiCfxNFTPreviewController) Post() {
 	tokenId := c.GetString("tokenId")
 	contract := c.GetString("contract")
 	var resp *http.Response
 	var err error
-	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/preview?contractAddress="+contract+"&tokenId="+tokenId)
+	resp, err = http.Get("https://confluxscan.io/stat/nft/checker/preview?contractAddress=" + contract + "&tokenId=" + tokenId)
 	if err != nil {
 		c.ErrorJson(-500, err.Error(), JsonData{})
 		return
@@ -197,6 +233,3 @@ func (c *ApiCfxNFTPreviewController) Post() {
 	}
 	c.Ctx.WriteString(string(body))
 }
-
-
-
